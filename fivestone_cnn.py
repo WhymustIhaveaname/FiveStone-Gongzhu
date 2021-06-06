@@ -79,7 +79,7 @@ def vs_rand(model,epoch):
             else:
                 state_nn=state_nn.takeAction(random.choice(state_nn.getPossibleActions()))
         #log(nn_color)
-        #pretty_board(state_nn)
+        #pretty_board(state_nn);input()
         result=nn_color*state_nn.getReward()
         if result==1:
             l_ans.append(state_nn.board.abs().sum().item())
@@ -123,11 +123,17 @@ def benchmark_color(model,nn_color,openings,epoch):
         else:
             l_ans.append("%s"%(i))
     color_dict={1:"bk",-1:"wt"}
-    log("epoch %d nn_color %s: %s"%(epoch,color_dict[nn_color]," ".join(l_ans)))
+    l_ans=" ".join(l_ans)
+    log("epoch %d nn_color %s: %s"%(epoch,color_dict[nn_color],l_ans))
+    return l_ans
 
 def benchmark(model,epoch):
-    benchmark_color(model,1,open_unbl_black,epoch)
-    benchmark_color(model,-1,open_unbl_white,epoch)
+    l_bk=benchmark_color(model,1,open_unbl_black,epoch)
+    l_wt=benchmark_color(model,-1,open_unbl_white,epoch)
+    if l_bk=="w w w w":
+        benchmark_color(model,1,open_bl,epoch)
+    if l_wt=="w w w w":
+        benchmark_color(model,-1,open_bl,epoch)
 
 def select_by_prob(children,player,softk):
     l=[(k,v) for k,v in children.items()]

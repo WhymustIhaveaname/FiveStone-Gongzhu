@@ -52,8 +52,8 @@ def train():
     log(model)
     log("loss_p_wt: %.1f, optim: %s"%(loss_p_wt,optim.__dict__['defaults'],))
 
-    for epoch in range(400):
-        if epoch%5==0:# and epoch>0:
+    for epoch in range(1000):
+        if (epoch<40 and epoch%5==0) or epoch%20==0:
             save_name='./model/%s-%s-%s-%d.pkl'%(model.__class__.__name__,model.num_layers(),model.num_paras(),epoch)
             torch.save(model.state_dict(),save_name)
             vs_noth(model,epoch)
@@ -63,7 +63,7 @@ def train():
         train_datas = gen_data(model,5)
         trainloader = torch.utils.data.DataLoader(train_datas,batch_size=32,shuffle=True,drop_last=True)
 
-        if epoch<5 or epoch%5==0:
+        if epoch<3 or (epoch<40 and epoch%5==0) or epoch%20==0:
             print_flag=True
         else:
             print_flag=False
@@ -72,7 +72,7 @@ def train():
             log("epoch %d with %d datas"%(epoch,len(train_datas)))
             for batch in trainloader:
                 policy,value = model(batch[0])
-                log(["%.2f"%(i) for i in value])
+                #log(["%.2f"%(i) for i in value])
                 log_p = F.log_softmax(policy*batch[3],dim=1)
                 loss_p = F.kl_div(log_p,batch[2],reduction="batchmean")
                 optim.zero_grad()
@@ -89,7 +89,7 @@ def train():
                     model.conv1.weight.grad.abs().mean().item()))
                 break
 
-        for age in range(5):
+        for age in range(3):
             running_loss = 0.0
             for batch in trainloader:
                 policy,value = model(batch[0])
@@ -97,7 +97,7 @@ def train():
                 log_p = F.log_softmax(policy*batch[3],dim=1)
                 loss_p = F.kl_div(log_p,batch[2],reduction="batchmean")
                 optim.zero_grad()
-                loss=loss_v+loss_p*1.0
+                loss=loss_v+loss_p*loss_p_wt
                 loss.backward()
                 optim.step()
                 running_loss += loss.item()
