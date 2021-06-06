@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: UTF-8 -*-
+from os import stat
 import time,sys,traceback,math,numpy
 LOGLEVEL={0:"DEBUG",1:"INFO",2:"WARN",3:"ERR",4:"FATAL"}
 LOGFILE=sys.argv[0].split(".")
@@ -71,7 +74,7 @@ class FiveStoneState():
     kernal_2_hori = torch.tensor([[[[0.1, 1, 1,0.1]]]])
     kernal_2_diag = torch.tensor([[[[0.1,0,0,0], [0,1,0,0], [0,0,1,0],[0,0,0,0.1]]]])
 
-    def __init__(self):
+    def __init__(self,argv=None):
         self.board = torch.zeros(9,9)
         self.board[4,4] = 1.0
         self.currentPlayer = -1
@@ -111,7 +114,8 @@ class FiveStoneState():
         conv1 = F.conv2d(self.board.view(1,1,9,9), self.kernal_5, bias=None, stride=1, padding=2, dilation=1, groups=1)
         if conv1.max() >= 0.9 or conv1.min() <= -0.9:
             return True
-        #Todo
+        if self.board.abs().sum()==81:
+            return True
         return False
 
 
@@ -196,6 +200,8 @@ class FiveStoneState():
             return 10000
         elif conv1.min() <= -0.9:
             return -10000
+        if self.board.sum()==81:
+            return 0
 
         boards = torch.stack((self.board.view(1,9,9), self.board.view(1,9,9).rot90(1,[1,2]),
                               self.board.view(1,9,9).rot90(2,[1,2]), self.board.view(1,9,9).rot90(3,[1,2])))
@@ -211,12 +217,12 @@ class FiveStoneState():
     def track_hist(self,hists):
         state=self
         for i in hists:
-            state=state.takeAction(i)
+            ip=(4-i[1],4+i[0])
+            state=state.takeAction(ip)
         return state
 
 def play_tui():
     state = FiveStoneState()
-    state=state.takeAction((4,4))
     searcher=abpruning(deep=2,n_killer=4)
     while not state.isTerminal():
         searcher.counter=0
@@ -227,7 +233,7 @@ def play_tui():
         best_action=max(searcher.children.items(),key=lambda x: x[1]*state.currentPlayer)
         log(best_action)
         state=state.takeAction(best_action[0])
-        print(state.board)
+        print(state.board.type(torch.int8))
         while True:
             istr=input("your action: ")
             if re.match("[0-9],[0-9]",istr):
@@ -250,21 +256,6 @@ def test_eg1():
     sys.exit(0)
 
 if __name__=="__main__":
-    test_eg1()
-    play_tui()
-    initialState = FiveStoneState()
-    #for i in range(2):
-    #    initialState.board[3+i][3+i]=1
-    initialState.board[3,2:8]=torch.tensor([-1,1,0,1,1,1])
-    print(initialState.board)
-    log("a")
-    for i in range(1):
-        initialState.getPossibleActions()
-    log("b")
-    #print(initialState.board)
-    #print(initialState.isTerminal())
-    #initialState.getReward()
-    # searcher=abpruning(deep=3)
-    # #searcher = mcts(iterationLimit=10)
-    # action = searcher.search(initialState=initialState)
-    # print(searcher.children)
+    #test_eg1()
+    #play_tui()
+    self_play()
