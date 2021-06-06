@@ -63,22 +63,24 @@ kern_h_diag = gen_kern_diag(kern_h_hori)
 kern_i_hori = torch.tensor([[0,1.,1,1,1,0],[1,0,0,0,0,0],[0,0,0,0,0,1]]).view(3,1,1,6)
 kern_i_diag = gen_kern_diag(kern_i_hori)
 
-#kern_possact = torch.tensor([[[[1.,1,1,1,1],[1,2,2,2,1],[1,2,-1024,2,1],[1,2,2,2,1],[1,1,1,1,1]]]])
-kern_possact = torch.tensor([[[[1.,1,1],[1,-1024,1],[1,1,1]]]])
+#kern_possact_5x5 = torch.tensor([[[[1.,1,1,1,1],[1,2,2,2,1],[1,2,-1024,2,1],[1,2,2,2,1],[1,1,1,1,1]]]])
+kern_possact_3x3 = torch.tensor([[[[1.,1,1],[1,-1024,1],[1,1,1]]]])
 
 class FiveStoneState():
     kernal_hori = torch.tensor([[[0,0,0,0,0],[0,0,0,0,0],[1/5,1/5,1/5,1/5,1/5],[0,0,0,0,0],[0,0,0,0,0]]])
     kernal_diag = torch.tensor([[[1/5,0,0,0,0],[0,1/5,0,0,0],[0,0,1/5,0,0],[0,0,0,1/5,0],[0,0,0,0,1/5]]])
     kernal_5 = torch.stack((kernal_hori, kernal_diag, kernal_hori.rot90(1,[1,2]), kernal_diag.rot90(1,[1,2])))
 
-    kernal_2_hori = torch.tensor([[[[0.1, 1, 1,0.1]]]])
-    kernal_2_diag = torch.tensor([[[[0.1,0,0,0], [0,1,0,0], [0,0,1,0],[0,0,0,0.1]]]])
-
     def __init__(self,argv=None):
         self.board = torch.zeros(9,9)
         self.board[4,4] = 1.0
         self.currentPlayer = -1
         self.attack_factor = 0.8
+
+    def reset(self):
+        self.board = torch.zeros(9,9)
+        self.board[4,4] = 1.0
+        self.currentPlayer = -1
 
     def getCurrentPlayer(self):
         return self.currentPlayer
@@ -92,13 +94,12 @@ class FiveStoneState():
     #     return possibleActions
 
     def getPossibleActions(self,printflag=False):
-        cv = F.conv2d(self.board.abs().view(1,1,9,9), kern_possact, padding=1)
+        cv = F.conv2d(self.board.abs().view(1,1,9,9), kern_possact_3x3, padding=1)
         if printflag:
             print(cv)
         l_temp=[(cv[0,0,i,j].item(),(i,j)) for i in range(9) for j in range(9) if cv[0,0,i,j]>0]
         l_temp.sort(key=lambda x:-1*x[0])
         return [i[1] for i in l_temp]
-        #pt_a = ((cv[:,0]==player*2) & (cv[:,1]==0) & (cv[:,2]==0)).sum().item()
 
     def takeAction(self, action):
         newState = deepcopy(self)
@@ -118,6 +119,25 @@ class FiveStoneState():
             return True
         return False
 
+    def getReward(self):
+        conv1 = F.conv2d(self.board.view(1,1,9,9), self.kernal_5, padding=2)
+        if conv1.max() >= 0.9:
+            return 10000
+        elif conv1.min() <= -0.9:
+            return -10000
+        if self.board.sum()==81:
+            return 0
+
+        boards = torch.stack((self.board.view(1,9,9), self.board.view(1,9,9).rot90(1,[1,2]),
+                              self.board.view(1,9,9).rot90(2,[1,2]), self.board.view(1,9,9).rot90(3,[1,2])))
+
+        bk_reward=self.getReward_sub(boards,1)
+        wt_reward=self.getReward_sub(boards,-1)
+        #print(bk_reward,wt_reward)
+        if self.currentPlayer == 1:
+            return bk_reward-self.attack_factor*wt_reward
+        else:
+            return self.attack_factor*bk_reward-wt_reward
 
     def getReward_sub(self,boards,player):
         cv = F.conv2d(boards, kern_a_hori, padding=0)
@@ -149,7 +169,7 @@ class FiveStoneState():
         cv = F.conv2d(boards, kern_d_diag, padding=0)
         pt_d += ((cv[:,0]==player*3) & (cv[:,1]==0) & (cv[:,2]==0)).sum().item()
         del cv
-        
+
         cv = F.conv2d(boards, kern_e_hori, padding=0)
         pt_e = ((cv[:,0]==player*3) & (cv[:,1]==0) & (cv[:,2]==0) & (cv[:,3]==0)).sum().item()
         cv = F.conv2d(boards, kern_e_diag, padding=0)
@@ -194,26 +214,6 @@ class FiveStoneState():
         return (5*pt_a + 50*pt_b + 20*pt_c1 + 10*pt_c2 + 200*pt_d +\
                450*pt_e + 450*pt_f + 245*pt_g + 100*pt_h + 4100*pt_i)/10
 
-    def getReward(self):
-        conv1 = F.conv2d(self.board.view(1,1,9,9), self.kernal_5, padding=2)
-        if conv1.max() >= 0.9:
-            return 10000
-        elif conv1.min() <= -0.9:
-            return -10000
-        if self.board.sum()==81:
-            return 0
-
-        boards = torch.stack((self.board.view(1,9,9), self.board.view(1,9,9).rot90(1,[1,2]),
-                              self.board.view(1,9,9).rot90(2,[1,2]), self.board.view(1,9,9).rot90(3,[1,2])))
-        
-        bk_reward=self.getReward_sub(boards,1)
-        wt_reward=self.getReward_sub(boards,-1)
-        #print(bk_reward,wt_reward)
-        if self.currentPlayer == 1:
-            return bk_reward-self.attack_factor*wt_reward
-        else:
-            return self.attack_factor*bk_reward-wt_reward
-
     def track_hist(self,hists):
         state=self
         for i in hists:
@@ -221,9 +221,19 @@ class FiveStoneState():
             state=state.takeAction(ip)
         return state
 
+def pretty_board(gamestate):
+    d_stone={1:"\u25cf",-1:"\u25cb",0:" "} #"\u25cb" "\u25cf"
+    li=[]
+    for i,r in enumerate(gamestate.board):
+        lj="|".join([d_stone[j.item()] for j in r])
+        li.append("%2d|%s|"%(i,lj))
+    li="\n".join(li)
+    log("\n%s"%(li))
+    return li
+
 def play_tui():
     state = FiveStoneState()
-    searcher=abpruning(deep=2,n_killer=4)
+    searcher=abpruning(deep=3,n_killer=4)
     while not state.isTerminal():
         searcher.counter=0
         log("searching...")
@@ -233,29 +243,21 @@ def play_tui():
         best_action=max(searcher.children.items(),key=lambda x: x[1]*state.currentPlayer)
         log(best_action)
         state=state.takeAction(best_action[0])
-        print(state.board.type(torch.int8))
+        #print(state.board.type(torch.int8))
+        pretty_board(state)
         while True:
             istr=input("your action: ")
-            if re.match("[0-9],[0-9]",istr):
-                myaction=tuple([int(i) for i in istr.split(",")])
-                state=state.takeAction(myaction)
-                break
+            r=re.match("[\\-0-9]+([,.])[\\-0-9]+",istr)
+            if r:
+                myaction=tuple([int(i) for i in istr.split(r.group(1))])
+                try:
+                    state=state.track_hist([myaction])
+                except:
+                    log("take action failed",l=3)
+                else:
+                    break
             else:
                 log("input format error!")
 
-def test_eg1():
-    state = FiveStoneState()
-    state=state.track_hist([(4,4),(3,3),(5,3),(3,4),(6,3),(3,6)])
-    print(state.board)
-    print(state.getReward())
-    searcher=abpruning(deep=1,n_killer=2)
-    log("searching...")
-    searcher.search(initialState=state)
-    log("searched %d cases"%(searcher.counter))
-    print(searcher.children)
-    sys.exit(0)
-
 if __name__=="__main__":
-    #test_eg1()
-    #play_tui()
-    self_play()
+    play_tui()
