@@ -25,50 +25,11 @@ open_bl=[[(1,1),(2,2)],[(1,1),(2,-2)],
         [(1,1),(2,1)],[(0,1),(2,2)],
         [(1,1),(2,0)],[(0,1),(1,1)]]
 
-def benchmark_color(model,nn_color,openings):
-    searcher=abpruning(deep=1,n_killer=2)
-    l_ans=[]
-    state_nn = FiveStone_CNN(model)
-    state_conv = FiveStoneState()
-    for i in range(len(openings)):
-        state_nn.reset()
-        state_conv.reset()
-        state_nn = state_nn.track_hist(openings[i])
-        state_conv = state_conv.track_hist(openings[i])
-        while not state_nn.isTerminal():
-            if state_nn.currentPlayer==nn_color:
-                searcher.search(initialState=state_nn)
-            elif state_nn.currentPlayer==nn_color*-1:
-                searcher.search(initialState=state_conv)
-            else:
-                log("what's your problem?!",l=2)
-
-            best=[(k,v) for k,v in searcher.children.items()]
-            best=max(best,key=lambda x:x[1]*state_nn.currentPlayer)
-
-            state_nn=state_nn.takeAction(best[0])
-            state_conv=state_conv.takeAction(best[0])
-        result=nn_color*state_conv.getReward()
-        if result==10000:
-            l_ans.append("w")
-        elif result==-10000:
-            l_ans.append("l")
-        elif result==0:
-            l_ans.append("d")
-        else:
-            l_ans.append("%s"%(i))
-    color_dict={1:"bk",-1:"wt"}
-    log("epoch %d nn_color %s: %s"%(epoch,color_dict[nn_color]," ".join(l_ans)))
-
-def benchmark(model,epoch):
-    benchmark_color(model,1,open_unbl_black,epoch)
-    benchmark_color(model,-1,open_unbl_white,epoch)
-
 def vs_noth(model,epoch):
     searcher=abpruning(deep=1,n_killer=2)
     l_ans=[]
     state_nn = FiveStone_CNN(model)
-    for i1,i2 in itertools.product(range(len(open_bl)),range(1000,1002)):
+    for i1,i2 in itertools.product(range(len(open_bl)),range(1024,1024+2)):
         state_nn.reset()
         state_nn=state_nn.track_hist(open_bl[i1])
         while not state_nn.isTerminal():
@@ -79,9 +40,8 @@ def vs_noth(model,epoch):
 
             input_data=state_nn.gen_input().view((1,3,9,9))
             policy,value=state_nn.model(input_data)
-            legal_mask=(state_nn.board==0).type(torch.cuda.FloatTensor).view(-1)
-            policy=(policy*legal_mask).view(9,9)
-            l=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if policy[i,j]>0]
+            policy=policy.view(9,9)
+            l=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if state_nn.board[i,j]==0]
             lv=F.softmax(torch.tensor([v for k,v in l]),dim=0)
             r=torch.multinomial(lv,1)
             state_nn=state_nn.takeAction(l[r][0])
@@ -129,6 +89,45 @@ def vs_rand(model,epoch):
             #pretty_board(state_nn)
     win_rate=len(l_ans)/(len(l_ans)+len(l_loss))*100
     log("epoch %d avg win steps: %d/%d=%.1f, %.1f%%"%(epoch,sum(l_ans),len(l_ans),sum(l_ans)/len(l_ans),win_rate))
+
+def benchmark_color(model,nn_color,openings,epoch):
+    searcher=abpruning(deep=1,n_killer=2)
+    l_ans=[]
+    state_nn = FiveStone_CNN(model)
+    state_conv = FiveStoneState()
+    for i in range(len(openings)):
+        state_nn.reset()
+        state_conv.reset()
+        state_nn = state_nn.track_hist(openings[i])
+        state_conv = state_conv.track_hist(openings[i])
+        while not state_nn.isTerminal():
+            if state_nn.currentPlayer==nn_color:
+                searcher.search(initialState=state_nn)
+            elif state_nn.currentPlayer==nn_color*-1:
+                searcher.search(initialState=state_conv)
+            else:
+                log("what's your problem?!",l=2)
+
+            best=[(k,v) for k,v in searcher.children.items()]
+            best=max(best,key=lambda x:x[1]*state_nn.currentPlayer)
+
+            state_nn=state_nn.takeAction(best[0])
+            state_conv=state_conv.takeAction(best[0])
+        result=nn_color*state_conv.getReward()
+        if result==10000:
+            l_ans.append("w")
+        elif result==-10000:
+            l_ans.append("l")
+        elif result==0:
+            l_ans.append("d")
+        else:
+            l_ans.append("%s"%(i))
+    color_dict={1:"bk",-1:"wt"}
+    log("epoch %d nn_color %s: %s"%(epoch,color_dict[nn_color]," ".join(l_ans)))
+
+def benchmark(model,epoch):
+    benchmark_color(model,1,open_unbl_black,epoch)
+    benchmark_color(model,-1,open_unbl_white,epoch)
 
 def select_by_prob(children,player,softk):
     l=[(k,v) for k,v in children.items()]

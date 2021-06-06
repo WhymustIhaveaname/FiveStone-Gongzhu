@@ -83,8 +83,8 @@ class FiveStone_CNN(FiveStoneState):
 
         with torch.no_grad():
             input_data=self.gen_input().view((1,3,9,9))
-            _,value = self.model(input_data).clip(-0.99,0.99)
-            value=value.view(1)
+            _,value = self.model(input_data)
+            value=value.view(1).clip(-0.99,0.99)
         return value
 
     def gen_input(self):
