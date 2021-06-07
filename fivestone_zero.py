@@ -10,9 +10,13 @@ from net_topo import PV_resnet, FiveStone_CNN#, PVnet_cnn
 from fivestone_cnn import open_bl,benchmark_color,benchmark,vs_rand,vs_noth
 
 SOFTK=3/FiveStone_CNN.WIN_REWARD
+ACTION_NUM=8
+AB_DEEP=2
+POSSACT_RAD=2
+log("softk: %.1f, ACTION_NUM: %d, AB_DEEP: %d, POSSACT_RAD: %d"%(SOFTK,ACTION_NUM,AB_DEEP,POSSACT_RAD))
 
 class FiveStone_ZERO(FiveStone_CNN):
-    def getPossibleActions(self,target_num=4):
+    def getPossibleActions(self,target_num=ACTION_NUM):
         """cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_3x3, padding=1)
         #cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_5x5, padding=2)
         l_temp=[(cv[0,0,i,j].item(),(i,j)) for i in range(9) for j in range(9) if cv[0,0,i,j]>0]
@@ -21,10 +25,14 @@ class FiveStone_ZERO(FiveStone_CNN):
         input_data=self.gen_input().view((1,3,9,9))
         policy,value=self.model(input_data)
         policy=policy.view(9,9)
-        #lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if self.board[i,j]==0]
-        #cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_3x3, padding=1)
-        cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_5x5, padding=2)
-        lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if cv[0,0,i,j]>0]
+        if POSSACT_RAD==1:
+            cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_3x3, padding=1)
+            lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if cv[0,0,i,j]>0]
+        elif POSSACT_RAD==2:
+            cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_5x5, padding=2)
+            lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if cv[0,0,i,j]>0]
+        elif POSSACT_RAD>2:
+            lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if self.board[i,j]==0]
         if len(lkv)<target_num:
             return [k for k,v in lkv]
         else:
@@ -34,7 +42,7 @@ class FiveStone_ZERO(FiveStone_CNN):
 
 def gen_data(model,num_games):
     train_datas=[]
-    searcher=abpruning(deep=2,n_killer=2)
+    searcher=abpruning(deep=AB_DEEP,n_killer=2)
     state = FiveStone_ZERO(model)
     for i in range(num_games):
         state.reset()
@@ -85,7 +93,7 @@ def gen_data(model,num_games):
     return train_datas
 
 def train(model):
-    optim = torch.optim.Adam(model.parameters(),lr=0.001,betas=(0.3,0.999),eps=1e-07,weight_decay=1e-4,amsgrad=False)
+    optim = torch.optim.Adam(model.parameters(),lr=0.0005,betas=(0.3,0.999),eps=1e-07,weight_decay=1e-4,amsgrad=False)
     loss_p_wt = 0.4
     log(model)
     log("loss_p_wt: %.1f, optim: %s"%(loss_p_wt,optim.__dict__['defaults'],))
@@ -98,7 +106,7 @@ def train(model):
             vs_rand(model,epoch)
             benchmark(model,epoch)
 
-        train_datas = gen_data(model,20)
+        train_datas = gen_data(model,10)
         trainloader = torch.utils.data.DataLoader(train_datas,batch_size=64,shuffle=True,drop_last=True)
 
         if epoch<3 or (epoch<40 and epoch%5==0) or epoch%20==0:
