@@ -49,10 +49,65 @@ class PVnet_cnn(nn.Module):
         out=F.relu(self.fn3(out))
         return self.fnp(out),self.fnv(out)
 
+class BasicBlock(nn.Module):
+    def __init__(self,in_planes,out_planes,stride=1):
+        super(BasicBlock, self).__init__()
+        self.conv1=nn.Conv2d(in_planes,out_planes,kernel_size=3,stride=stride,padding=1,bias=False)
+        self.bn1=nn.BatchNorm2d(out_planes)
+        self.conv2=nn.Conv2d(out_planes,out_planes,kernel_size=3,stride=1,padding=1,bias=False)
+        self.bn2=nn.BatchNorm2d(out_planes)
+
+        if in_planes!=out_planes or stride!=1:
+            self.shortcut=nn.Sequential(
+                nn.Conv2d(in_planes,out_planes,kernel_size=1,stride=stride,bias=False),
+                nn.BatchNorm2d(out_planes)
+            )
+        else:
+            self.shortcut=nn.Sequential()
+
+    def forward(self, x):
+        out=F.relu(self.bn1(self.conv1(x)))
+        out=self.bn2(self.conv2(out))
+        out+=self.shortcut(x)
+        out=F.relu(out)
+        return out
+
+class PV_resnet(PVnet_cnn):
+    def __init__(self):
+        super(PV_resnet,self).__init__()
+        self.conv1=nn.Conv2d(3,64,kernel_size=5,padding=0,bias=False)
+        self.bn1=nn.BatchNorm2d(64)
+        self.num_conv_layers=1
+
+        self.layer1 = self._make_layer(64,128,stride=1)
+        self.layer2 = self._make_layer(128,256,stride=2)
+        self.layer3 = self._make_layer(256,512,stride=2)
+
+        self.fnp=nn.Linear(512*2*2,81)
+        self.fnv=nn.Linear(512*2*2,1)
+
+    def _make_layer(self,in_planes,out_planes,stride=1):
+        self.num_conv_layers+=4
+        layers=[BasicBlock(in_planes,out_planes,stride=stride),BasicBlock(out_planes,out_planes)]
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+        out=F.relu(self.bn1(self.conv1(x)))
+        out=self.layer1(out)
+        out=self.layer2(out)
+        out=self.layer3(out)
+        out=out.view(-1,512*2*2)
+        p=self.fnp(out)
+        v=self.fnv(out)
+        return p,v
+
+    def __str__(self):
+        return "%s-%d %s"%(self.__class__.__name__,self.num_conv_layers,self.num_paras())
+
 class FiveStone_CNN(FiveStoneState):
-    kern_5 = FiveStoneState.kernal_5.cuda()
-    kern_possact_5x5 = torch.tensor([[[[1.,1,1,1,1],[1,2,2,2,1],[1,2,-1024,2,1],[1,2,2,2,1],[1,1,1,1,1]]]],device="cuda")
-    #kern_possact_3x3 = torch.tensor([[[[1.,1,1],[1,-1024,1],[1,1,1]]]]).cuda()
+    kern_5 = FiveStoneState.kern_5.cuda()
+    #kern_possact_5x5 = torch.tensor([[[[1.,1,1,1,1],[1,2,2,2,1],[1,2,-1024,2,1],[1,2,2,2,1],[1,1,1,1,1]]]],device="cuda")
+    kern_possact_3x3 = torch.tensor([[[[1.,1,1],[1,-1024,1],[1,1,1]]]]).cuda()
 
     def __init__(self, model):
         self.board = torch.zeros(9,9).cuda()
@@ -65,19 +120,11 @@ class FiveStone_CNN(FiveStoneState):
         self.board = self.board.cuda()
 
     def getPossibleActions(self):
-        #cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_3x3, padding=1)
-        cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_5x5, padding=2)
+        cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_3x3, padding=1)
+        #cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_5x5, padding=2)
         l_temp=[(cv[0,0,i,j].item(),(i,j)) for i in range(9) for j in range(9) if cv[0,0,i,j]>0]
         l_temp.sort(key=lambda x:-1*x[0])
         return [i[1] for i in l_temp]
-
-    def isTerminal(self):
-        conv1 = F.conv2d(self.board.view(1,1,9,9), self.kern_5, padding=2)
-        if conv1.max() >= 0.9 or conv1.min() <= -0.9:
-            return True
-        if self.board.abs().sum()==81:
-            return True
-        return False
 
     def getReward(self):
         conv1 = F.conv2d(self.board.view(1,1,9,9), FiveStone_CNN.kern_5, padding=2)
@@ -91,10 +138,10 @@ class FiveStone_CNN(FiveStoneState):
         with torch.no_grad():
             input_data=self.gen_input().view((1,3,9,9))
             _,value = self.model(input_data)
-            value=value.view(1).clip(-0.99,0.99)
+            value=value.view(1).clip(-0.95,0.95)
         return value
 
     def gen_input(self):
         return torch.stack([(self.board==1).type(torch.cuda.FloatTensor),
-                                (self.board==-1).type(torch.cuda.FloatTensor),
-                                torch.ones(9,9,device="cuda")*self.currentPlayer])
+                            (self.board==-1).type(torch.cuda.FloatTensor),
+                            torch.ones(9,9,device="cuda")*self.currentPlayer])

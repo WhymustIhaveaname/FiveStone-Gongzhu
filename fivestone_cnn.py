@@ -70,9 +70,8 @@ def vs_rand(model,epoch):
                 state_nn=state_nn.takeAction(best[0])"""
                 input_data=state_nn.gen_input().view((1,3,9,9))
                 policy,value=state_nn.model(input_data)
-                legal_mask=(state_nn.board==0).type(torch.cuda.FloatTensor)
                 policy=policy.view(9,9)
-                l=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if legal_mask[i,j]>0]
+                l=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if state_nn.board[i,j]==0]
                 lv=F.softmax(torch.tensor([v for k,v in l]),dim=0)
                 r=torch.multinomial(lv,1)
                 state_nn=state_nn.takeAction(l[r][0])
@@ -95,24 +94,29 @@ def benchmark_color(model,nn_color,openings,epoch):
     l_ans=[]
     state_nn = FiveStone_CNN(model)
     state_conv = FiveStoneState()
-    for i in range(len(openings)):
+    for i1,i2 in itertools.product(range(len(openings)),range(1000,1002)):
         state_nn.reset()
         state_conv.reset()
-        state_nn = state_nn.track_hist(openings[i])
-        state_conv = state_conv.track_hist(openings[i])
+        state_nn = state_nn.track_hist(openings[i1])
+        state_conv = state_conv.track_hist(openings[i1])
         while not state_nn.isTerminal():
             if state_nn.currentPlayer==nn_color:
-                searcher.search(initialState=state_nn)
-            elif state_nn.currentPlayer==nn_color*-1:
-                searcher.search(initialState=state_conv)
+                #searcher.search(initialState=state_nn)
+                input_data=state_nn.gen_input().view((1,3,9,9))
+                policy,value=state_nn.model(input_data)
+                policy=policy.view(9,9)
+                l=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if state_nn.board[i,j]==0]
+                lv=F.softmax(torch.tensor([v for k,v in l]),dim=0)
+                r=torch.multinomial(lv,1)
+                action=l[r][0]
             else:
-                log("what's your problem?!",l=2)
+                searcher.search(initialState=state_conv)
+                best=[(k,v) for k,v in searcher.children.items()]
+                best=max(best,key=lambda x:x[1]*state_nn.currentPlayer)
+                action=best[0]
 
-            best=[(k,v) for k,v in searcher.children.items()]
-            best=max(best,key=lambda x:x[1]*state_nn.currentPlayer)
-
-            state_nn=state_nn.takeAction(best[0])
-            state_conv=state_conv.takeAction(best[0])
+            state_nn=state_nn.takeAction(action)
+            state_conv=state_conv.takeAction(action)
         result=nn_color*state_conv.getReward()
         if result==10000:
             l_ans.append("w")
@@ -130,11 +134,11 @@ def benchmark_color(model,nn_color,openings,epoch):
 def benchmark(model,epoch):
     l_bk=benchmark_color(model,1,open_unbl_black,epoch)
     l_wt=benchmark_color(model,-1,open_unbl_white,epoch)
-    if l_bk=="w w w w":
+    if l_bk.startswith("w w"):
         benchmark_color(model,1,open_bl,epoch)
-    if l_wt=="w w w w":
+    if l_wt.startswith("w w"):
         benchmark_color(model,-1,open_bl,epoch)
-
+"""
 def select_by_prob(children,player,softk):
     l=[(k,v) for k,v in children.items()]
     lv=torch.tensor([v for k,v in l])*player*softk
@@ -227,3 +231,4 @@ def train_supervised():
 
 if __name__=="__main__":
     train_supervised()
+"""

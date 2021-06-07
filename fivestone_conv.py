@@ -69,7 +69,7 @@ kern_possact_3x3 = torch.tensor([[[[1.,1,1],[1,-1024,1],[1,1,1]]]])
 class FiveStoneState():
     kernal_hori = torch.tensor([[[0,0,0,0,0],[0,0,0,0,0],[1/5,1/5,1/5,1/5,1/5],[0,0,0,0,0],[0,0,0,0,0]]])
     kernal_diag = torch.tensor([[[1/5,0,0,0,0],[0,1/5,0,0,0],[0,0,1/5,0,0],[0,0,0,1/5,0],[0,0,0,0,1/5]]])
-    kernal_5 = torch.stack((kernal_hori, kernal_diag, kernal_hori.rot90(1,[1,2]), kernal_diag.rot90(1,[1,2])))
+    kern_5 = torch.stack((kernal_hori, kernal_diag, kernal_hori.rot90(1,[1,2]), kernal_diag.rot90(1,[1,2])))
 
     def __init__(self,argv=None):
         self.board = torch.zeros(9,9)
@@ -112,7 +112,7 @@ class FiveStoneState():
         return newState
 
     def isTerminal(self):
-        conv1 = F.conv2d(self.board.view(1,1,9,9), self.kernal_5, bias=None, stride=1, padding=2, dilation=1, groups=1)
+        conv1 = F.conv2d(self.board.view(1,1,9,9), self.kern_5, padding=2)
         if conv1.max() >= 0.9 or conv1.min() <= -0.9:
             return True
         if self.board.abs().sum()==81:
@@ -120,7 +120,7 @@ class FiveStoneState():
         return False
 
     def getReward(self):
-        conv1 = F.conv2d(self.board.view(1,1,9,9), self.kernal_5, padding=2)
+        conv1 = F.conv2d(self.board.view(1,1,9,9), self.kern_5, padding=2)
         if conv1.max() >= 0.9:
             return 10000
         elif conv1.min() <= -0.9:

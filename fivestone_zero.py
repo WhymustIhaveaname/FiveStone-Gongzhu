@@ -6,18 +6,18 @@ import torch.nn.functional as F
 
 from MCTS.mcts import abpruning
 from fivestone_conv import log, FiveStoneState, pretty_board
-from net_topo import PVnet_cnn, FiveStone_CNN
-from fivestone_cnn import open_bl,select_by_prob,benchmark_color,benchmark,vs_rand,vs_noth
+from net_topo import PV_resnet, FiveStone_CNN#, PVnet_cnn
+from fivestone_cnn import open_bl,benchmark_color,benchmark,vs_rand,vs_noth
 
 SOFTK=3
 
-def gen_data(model,duplicate):
+def gen_data(model,num_games):
     train_datas=[]
     searcher=abpruning(deep=1,n_killer=2)
     state = FiveStone_CNN(model)
-    for i1,i2 in itertools.product(range(len(open_bl)),range(1024,1024+duplicate)):
+    for i in range(num_games):
         state.reset()
-        state = state.track_hist(open_bl[i1])
+        state = state.track_hist(open_bl[i%len(open_bl)])
         #pretty_board(state)
         while not state.isTerminal():
             searcher.search(initialState=state)
@@ -28,9 +28,6 @@ def gen_data(model,duplicate):
             else:
                 log("what's your problem?!",l=2)
 
-            input_data=state.gen_input()
-            target_v=best_value
-
             lkv=[(k,v) for k,v in searcher.children.items()]
             lv=torch.tensor([v for k,v in lkv])*state.currentPlayer*SOFTK
             lv=F.softmax(lv,dim=0)
@@ -38,21 +35,20 @@ def gen_data(model,duplicate):
             for j in range(len(lkv)):
                 target_p[lkv[j][0]]=lv[j]
             legal_mask=(state.board==0).type(torch.cuda.FloatTensor)
-            train_datas.append((input_data,target_v,target_p.view(-1),legal_mask.view(-1)))
+            train_datas.append((state.gen_input(),best_value,target_p.view(-1),legal_mask.view(-1)))
 
-            next_action=select_by_prob(searcher.children,state.currentPlayer,SOFTK)
-            state=state.takeAction(next_action)
+            r=torch.multinomial(lv,1)
+            state=state.takeAction(lkv[r][0])
         #pretty_board(state);input()
     return train_datas
 
-def train():
-    model = PVnet_cnn().cuda()
+def train(model):
     optim = torch.optim.Adam(model.parameters(),lr=0.001,betas=(0.3,0.999),eps=1e-07,weight_decay=1e-4,amsgrad=False)
-    loss_p_wt = 0.3
+    loss_p_wt = 1.0
     log(model)
     log("loss_p_wt: %.1f, optim: %s"%(loss_p_wt,optim.__dict__['defaults'],))
 
-    for epoch in range(1000):
+    for epoch in range(400):
         if (epoch<40 and epoch%5==0) or epoch%20==0:
             save_name='./model/%s-%s-%s-%d.pkl'%(model.__class__.__name__,model.num_layers(),model.num_paras(),epoch)
             torch.save(model.state_dict(),save_name)
@@ -60,7 +56,7 @@ def train():
             vs_rand(model,epoch)
             benchmark(model,epoch)
 
-        train_datas = gen_data(model,5)
+        train_datas = gen_data(model,50)
         trainloader = torch.utils.data.DataLoader(train_datas,batch_size=32,shuffle=True,drop_last=True)
 
         if epoch<3 or (epoch<40 and epoch%5==0) or epoch%20==0:
@@ -72,21 +68,16 @@ def train():
             log("epoch %d with %d datas"%(epoch,len(train_datas)))
             for batch in trainloader:
                 policy,value = model(batch[0])
-                #log(["%.2f"%(i) for i in value])
                 log_p = F.log_softmax(policy*batch[3],dim=1)
                 loss_p = F.kl_div(log_p,batch[2],reduction="batchmean")
                 optim.zero_grad()
                 loss_p.backward(retain_graph=True)
-                log("loss_p: %6.4f, grad_p_fn1: %.8f, grad_p_conv1: %.8f"%(loss_p.item(),
-                    model.fn1.weight.grad.abs().mean().item(),
-                    model.conv1.weight.grad.abs().mean().item()))
+                log("loss_p: %6.4f, grad_p_conv1: %.8f"%(loss_p.item(),model.conv1.weight.grad.abs().mean().item()))
 
                 loss_v = F.mse_loss(batch[1], value, reduction='mean').sqrt()
                 optim.zero_grad()
                 loss_v.backward(retain_graph=True)
-                log("loss_v: %6.4f, grad_v_fn1: %.8f, grad_p_conv1: %.8f"%(loss_v.item(),
-                    model.fn1.weight.grad.abs().mean().item(),
-                    model.conv1.weight.grad.abs().mean().item()))
+                log("loss_v: %6.4f, grad_p_conv1: %.8f"%(loss_v.item(),model.conv1.weight.grad.abs().mean().item()))
                 break
 
         for age in range(3):
@@ -96,6 +87,7 @@ def train():
                 loss_v = F.mse_loss(batch[1], value, reduction='mean').sqrt()
                 log_p = F.log_softmax(policy*batch[3],dim=1)
                 loss_p = F.kl_div(log_p,batch[2],reduction="batchmean")
+
                 optim.zero_grad()
                 loss=loss_v+loss_p*loss_p_wt
                 loss.backward()
@@ -105,4 +97,6 @@ def train():
                 log("    age %2d: %.6f"%(age,running_loss/len(train_datas)))
 
 if __name__=="__main__":
-    train()
+    #model = PVnet_cnn().cuda()
+    model = PV_resnet().cuda()
+    train(model)
