@@ -29,28 +29,17 @@ def vs_noth(model,epoch):
     searcher=abpruning(deep=1,n_killer=2)
     l_ans=[]
     state_nn = FiveStone_CNN(model)
-    for i1,i2 in itertools.product(range(len(open_bl)),range(1024,1024+2)):
+    for i1,i2 in itertools.product(range(len(open_bl)),[100,101,102,103]):
         state_nn.reset()
-        state_nn=state_nn.track_hist(open_bl[i1])
+        state_nn.track_hist(open_bl[i1],rot=i2)
         while not state_nn.isTerminal():
             state_nn.currentPlayer=1
-            """searcher.search(initialState=state_nn)
-            best=[(k,v) for k,v in searcher.children.items()]
-            best=max(best,key=lambda x:x[1]*state_nn.currentPlayer)"""
-
-            input_data=state_nn.gen_input().view((1,3,9,9))
-            policy,value=state_nn.model(input_data)
-            policy=policy.view(9,9)
-            l=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if state_nn.board[i,j]==0]
-            lv=F.softmax(torch.tensor([v for k,v in l]),dim=0)
-            r=torch.multinomial(lv,1)
-            state_nn=state_nn.takeAction(l[r][0])
-        #pretty_board(state_nn);input()
+            state_nn=state_nn.takeAction(state_nn.policy_choice_best())
         result=state_nn.getReward()
-        if result==1:
+        if result==FiveStone_CNN.WIN_REWARD:
             l_ans.append(state_nn.board.abs().sum().item())
         else:
-            log("lost in competing random! color: %d, result: %d"%(nn_color,result))
+            log("lost in competing nothing! result: %d"%(result))
             pretty_board(state_nn)
     log("epoch %d avg win steps: %d/%d=%.1f"%(epoch,sum(l_ans),len(l_ans),sum(l_ans)/len(l_ans)))
 
@@ -59,33 +48,19 @@ def vs_rand(model,epoch):
     l_ans=[]
     l_loss=[]
     state_nn = FiveStone_CNN(model)
-    for i1,nn_color in itertools.product(range(len(open_bl)),(-1,1)):
+    for i1,nn_color,rot in itertools.product(range(len(open_bl)),[-1,1],[100,101,102,103]):
         state_nn.reset()
-        state_nn=state_nn.track_hist(open_bl[i1])
+        state_nn.track_hist(open_bl[i1],rot=rot)
         while not state_nn.isTerminal():
             if state_nn.currentPlayer==nn_color:
-                """searcher.search(initialState=state_nn)
-                best=[(k,v) for k,v in searcher.children.items()]
-                best=max(best,key=lambda x:x[1]*state_nn.currentPlayer)
-                state_nn=state_nn.takeAction(best[0])"""
-                input_data=state_nn.gen_input().view((1,3,9,9))
-                policy,value=state_nn.model(input_data)
-                policy=policy.view(9,9)
-                l=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if state_nn.board[i,j]==0]
-                lv=F.softmax(torch.tensor([v for k,v in l]),dim=0)
-                r=torch.multinomial(lv,1)
-                state_nn=state_nn.takeAction(l[r][0])
+                state_nn=state_nn.takeAction(state_nn.policy_choice_best())
             else:
-                state_nn=state_nn.takeAction(random.choice(state_nn.getPossibleActions()))
-        #log(nn_color)
-        #pretty_board(state_nn);input()
+                state_nn=state_nn.takeAction(random.choice(state_nn.getPossibleActions(surpress_warning=True)))
         result=nn_color*state_nn.getReward()
-        if result==1:
+        if result==FiveStone_CNN.WIN_REWARD:
             l_ans.append(state_nn.board.abs().sum().item())
         else:
             l_loss.append(result)
-            #log("lost in competing random! color: %d, result: %d"%(nn_color,result))
-            #pretty_board(state_nn)
     win_rate=len(l_ans)/(len(l_ans)+len(l_loss))*100
     log("epoch %d avg win steps: %d/%d=%.1f, %.1f%%"%(epoch,sum(l_ans),len(l_ans),sum(l_ans)/len(l_ans),win_rate))
 
@@ -94,27 +69,19 @@ def benchmark_color(model,nn_color,openings,epoch):
     l_ans=[]
     state_nn = FiveStone_CNN(model)
     state_conv = FiveStoneState()
-    for i1,i2 in itertools.product(range(len(openings)),range(1000,1002)):
+    for i1,i2 in itertools.product(range(len(openings)),[100,101,102,103]):
         state_nn.reset()
         state_conv.reset()
-        state_nn = state_nn.track_hist(openings[i1])
-        state_conv = state_conv.track_hist(openings[i1])
+        state_nn.track_hist(openings[i1],rot=i2)
+        state_conv.track_hist(openings[i1],rot=i2)
         while not state_nn.isTerminal():
             if state_nn.currentPlayer==nn_color:
-                #searcher.search(initialState=state_nn)
-                input_data=state_nn.gen_input().view((1,3,9,9))
-                policy,value=state_nn.model(input_data)
-                policy=policy.view(9,9)
-                l=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if state_nn.board[i,j]==0]
-                lv=F.softmax(torch.tensor([v for k,v in l]),dim=0)
-                r=torch.multinomial(lv,1)
-                action=l[r][0]
+                action=state_nn.policy_choice_best()
             else:
                 searcher.search(initialState=state_conv)
                 best=[(k,v) for k,v in searcher.children.items()]
                 best=max(best,key=lambda x:x[1]*state_nn.currentPlayer)
                 action=best[0]
-
             state_nn=state_nn.takeAction(action)
             state_conv=state_conv.takeAction(action)
         result=nn_color*state_conv.getReward()

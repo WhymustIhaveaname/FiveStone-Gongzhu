@@ -1,4 +1,4 @@
-import torch
+import torch,itertools
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -108,6 +108,7 @@ class FiveStone_CNN(FiveStoneState):
     kern_5 = FiveStoneState.kern_5.cuda()
     #kern_possact_5x5 = torch.tensor([[[[1.,1,1,1,1],[1,2,2,2,1],[1,2,-1024,2,1],[1,2,2,2,1],[1,1,1,1,1]]]],device="cuda")
     kern_possact_3x3 = torch.tensor([[[[1.,1,1],[1,-1024,1],[1,1,1]]]]).cuda()
+    WIN_REWARD=10.0
 
     def __init__(self, model):
         self.board = torch.zeros(9,9).cuda()
@@ -119,7 +120,9 @@ class FiveStone_CNN(FiveStoneState):
         FiveStoneState.reset(self)
         self.board = self.board.cuda()
 
-    def getPossibleActions(self):
+    def getPossibleActions(self,surpress_warning=False):
+        if not surpress_warning:
+            log("obsolete");input()
         cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_3x3, padding=1)
         #cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_5x5, padding=2)
         l_temp=[(cv[0,0,i,j].item(),(i,j)) for i in range(9) for j in range(9) if cv[0,0,i,j]>0]
@@ -129,19 +132,36 @@ class FiveStone_CNN(FiveStoneState):
     def getReward(self):
         conv1 = F.conv2d(self.board.view(1,1,9,9), FiveStone_CNN.kern_5, padding=2)
         if conv1.max() >= 0.9:
-            return torch.tensor([1.0], device="cuda")
+            return torch.tensor([FiveStone_CNN.WIN_REWARD], device="cuda")
         elif conv1.min() <= -0.9:
-            return torch.tensor([-1.0], device="cuda")
+            return torch.tensor([-FiveStone_CNN.WIN_REWARD], device="cuda")
         if self.board.sum()==81:
             return torch.tensor([0.0], device="cuda")
 
         with torch.no_grad():
             input_data=self.gen_input().view((1,3,9,9))
             _,value = self.model(input_data)
-            value=value.view(1).clip(-0.95,0.95)
+            value=value.view(1).clip(-FiveStone_CNN.WIN_REWARD*0.99,FiveStone_CNN.WIN_REWARD*0.99)
         return value
 
     def gen_input(self):
         return torch.stack([(self.board==1).type(torch.cuda.FloatTensor),
                             (self.board==-1).type(torch.cuda.FloatTensor),
                             torch.ones(9,9,device="cuda")*self.currentPlayer])
+
+    def policy_choice_best(self):
+        input_data=self.gen_input().view((1,3,9,9))
+        policy,value=self.model(input_data)
+        policy=policy.view(9,9)
+        lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if self.board[i,j]==0]
+        best=max(lkv,key=lambda x: x[1])
+        return best[0]
+
+    def policy_choice_softmax(self):
+        input_data=self.gen_input().view((1,3,9,9))
+        policy,value=self.model(input_data)
+        policy=policy.view(9,9)
+        lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if self.board[i,j]==0]
+        lv=F.softmax(torch.tensor([v for k,v in lkv]),dim=0)
+        r=torch.multinomial(lv,1)
+        return lkv[r][0]

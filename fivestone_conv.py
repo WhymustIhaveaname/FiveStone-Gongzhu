@@ -82,16 +82,24 @@ class FiveStoneState():
         self.board[4,4] = 1.0
         self.currentPlayer = -1
 
+    def track_hist(self,hists,rot=0):
+        for i in hists:
+            if rot%4==0:
+                ip=(4-i[1],4+i[0])
+            elif rot%4==1:  # i[1]-->i[0]; i[0]--> -i[1]
+                ip=(4-i[0],4-i[1])
+            elif rot%4==2:
+                ip=(4+i[1],4-i[0])
+            elif rot%4==3:
+                ip=(4+i[0],4+i[1])
+            if self.board[ip[0]][ip[1]]!=0:
+                log(self.board)
+                raise Exception("Put stone on existed stone?")
+            self.board[ip[0]][ip[1]] = self.currentPlayer
+            self.currentPlayer *= -1
+
     def getCurrentPlayer(self):
         return self.currentPlayer
-
-    # def getPossibleActions(self):
-    #     possibleActions = []
-    #     for i in range(len(self.board)):
-    #         for j in range(len(self.board[i])):
-    #             if self.board[i][j] == 0:
-    #                 possibleActions.append((i,j))
-    #     return possibleActions
 
     def getPossibleActions(self,printflag=False):
         cv = F.conv2d(self.board.abs().view(1,1,9,9), kern_possact_3x3, padding=1)
@@ -214,13 +222,6 @@ class FiveStoneState():
         return (5*pt_a + 50*pt_b + 20*pt_c1 + 10*pt_c2 + 200*pt_d +\
                450*pt_e + 450*pt_f + 245*pt_g + 100*pt_h + 4100*pt_i)/10
 
-    def track_hist(self,hists):
-        state=self
-        for i in hists:
-            ip=(4-i[1],4+i[0])
-            state=state.takeAction(ip)
-        return state
-
 def pretty_board(gamestate):
     d_stone={1:"\u25cf",-1:"\u25cb",0:" "} #"\u25cb" "\u25cf"
     li=[]
@@ -259,5 +260,13 @@ def play_tui():
             else:
                 log("input format error!")
 
+def test_rot():
+    state = FiveStoneState()
+    for i in range(4):
+        state.reset()
+        state.track_hist([(1,1),(2,-2)],rot=i)
+        pretty_board(state)
+
 if __name__=="__main__":
-    play_tui()
+    test_rot()
+    #play_tui()
