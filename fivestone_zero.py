@@ -12,7 +12,7 @@ from fivestone_cnn import open_bl,benchmark_color,benchmark,vs_rand,vs_noth
 SOFTK=3/FiveStone_CNN.WIN_REWARD
 
 class FiveStone_ZERO(FiveStone_CNN):
-    def getPossibleActions(self,target_num=8):
+    def getPossibleActions(self,target_num=4):
         """cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_3x3, padding=1)
         #cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_5x5, padding=2)
         l_temp=[(cv[0,0,i,j].item(),(i,j)) for i in range(9) for j in range(9) if cv[0,0,i,j]>0]
@@ -22,7 +22,8 @@ class FiveStone_ZERO(FiveStone_CNN):
         policy,value=self.model(input_data)
         policy=policy.view(9,9)
         #lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if self.board[i,j]==0]
-        cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_3x3, padding=1)
+        #cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_3x3, padding=1)
+        cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_5x5, padding=2)
         lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if cv[0,0,i,j]>0]
         if len(lkv)<target_num:
             return [k for k,v in lkv]
@@ -33,12 +34,13 @@ class FiveStone_ZERO(FiveStone_CNN):
 
 def gen_data(model,num_games):
     train_datas=[]
-    searcher=abpruning(deep=1,n_killer=2)
+    searcher=abpruning(deep=2,n_killer=2)
     state = FiveStone_ZERO(model)
     for i in range(num_games):
         state.reset()
         state.track_hist(open_bl[i%len(open_bl)],rot=i//len(open_bl))
-        duplicated_flag=False
+        #duplicated_flag=False
+        vidata=[]
         while not state.isTerminal():
             #searcher.counter=0
             searcher.search(initialState=state)
@@ -58,28 +60,33 @@ def gen_data(model,num_games):
             for j in range(len(lkv)):
                 target_p[lkv[j][0]]=lv[j]
             legal_mask=(state.board==0).type(torch.cuda.FloatTensor)
-
             in_mat=state.gen_input()
-            if best_value.abs()==FiveStone_CNN.WIN_REWARD and not duplicated_flag:
-                n_dup=4*int((state.board.abs().sum().item()-3)/8+1)
-                duplicated_flag=True
-            else:
-                n_dup=4
-            for j in range(n_dup):
+            for j in range(4):
+                this_data=(torch.rot90(in_mat,j,[1,2]),best_value,
+                           torch.rot90(target_p,j,[0,1]).reshape(81),
+                           torch.rot90(legal_mask,j,[0,1]).reshape(81))
+                train_datas.append(this_data)
+            if len(vidata)==0 and best_value.abs()>=FiveStone_CNN.WIN_REWARD*0.9:
+                vidata=[in_mat,best_value,target_p,legal_mask]
+
+            r=torch.multinomial(lv,1)
+            state=state.takeAction(lkv[r][0])
+
+        if len(vidata)>0 and vidata[1]*state.getReward()>0:
+            in_mat,best_value,target_p,legal_mask=vidata
+            vid_dup=4*int((state.board.abs().sum().item()-3)/8)
+            #log("duplicating vid: %s"%(vidata,));input()
+            for j in range(vid_dup):
                 this_data=(torch.rot90(in_mat,j,[1,2]),best_value,
                            torch.rot90(target_p,j,[0,1]).reshape(81),
                            torch.rot90(legal_mask,j,[0,1]).reshape(81))
                 train_datas.append(this_data)
 
-            r=torch.multinomial(lv,1)
-            state=state.takeAction(lkv[r][0])
-        #log([i[1] for i in train_datas])
-
     return train_datas
 
 def train(model):
     optim = torch.optim.Adam(model.parameters(),lr=0.001,betas=(0.3,0.999),eps=1e-07,weight_decay=1e-4,amsgrad=False)
-    loss_p_wt = 0.2
+    loss_p_wt = 0.4
     log(model)
     log("loss_p_wt: %.1f, optim: %s"%(loss_p_wt,optim.__dict__['defaults'],))
 
@@ -91,7 +98,7 @@ def train(model):
             vs_rand(model,epoch)
             benchmark(model,epoch)
 
-        train_datas = gen_data(model,10)
+        train_datas = gen_data(model,20)
         trainloader = torch.utils.data.DataLoader(train_datas,batch_size=64,shuffle=True,drop_last=True)
 
         if epoch<3 or (epoch<40 and epoch%5==0) or epoch%20==0:
@@ -131,23 +138,26 @@ def train(model):
             if print_flag and (age<3 or (age+1)%5==0):
                 log("    age %2d: %.6f"%(age,running_loss/len(train_datas)))
 
-def test_must_win():
-    model = PV_resnet().cuda()
-    model.load_state_dict(torch.load("./logs/3/PV_resnet-16-15857234-25.pkl",map_location="cuda"))
+def test_must_win(model):
     state = FiveStone_ZERO(model)
     for i in range(4):
-        state.board[5,4+i]=1
-    state.currentPlayer=1
+        state.board[5,4+i]=-1
+    state.currentPlayer=-1
     input_data=state.gen_input().view((1,3,9,9))
     policy,value=state.model(input_data)
     policy=policy.view(9,9)
-    log(policy)
+    s=[]
+    for i in range(9):
+        s.append(" ".join(["%6.2f"%(policy[i,j]) for j in range(9)]))
+    log("\n%s"%("\n".join(s)))
     log(value)
     pretty_board(state.takeAction(state.policy_choice_best()))
 
 if __name__=="__main__":
-    #test_must_win()
     #model = PVnet_cnn().cuda()
     model = PV_resnet().cuda()
-    #model.load_state_dict(torch.load("./logs/3/PV_resnet-16-15857234-25.pkl",map_location="cuda"))
+    start_file="./logs/6_1/PV_resnet-16-15857234-180.pkl"
+    model.load_state_dict(torch.load(start_file,map_location="cuda"))
+    log("load from %s"%(start_file))
+    #test_must_win(model)
     train(model)

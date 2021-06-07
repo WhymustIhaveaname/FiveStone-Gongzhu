@@ -106,7 +106,7 @@ class PV_resnet(PVnet_cnn):
 
 class FiveStone_CNN(FiveStoneState):
     kern_5 = FiveStoneState.kern_5.cuda()
-    #kern_possact_5x5 = torch.tensor([[[[1.,1,1,1,1],[1,2,2,2,1],[1,2,-1024,2,1],[1,2,2,2,1],[1,1,1,1,1]]]],device="cuda")
+    kern_possact_5x5 = torch.tensor([[[[1.,1,1,1,1],[1,2,2,2,1],[1,2,-1024,2,1],[1,2,2,2,1],[1,1,1,1,1]]]],device="cuda")
     kern_possact_3x3 = torch.tensor([[[[1.,1,1],[1,-1024,1],[1,1,1]]]]).cuda()
     WIN_REWARD=10.0
 
