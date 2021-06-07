@@ -12,18 +12,18 @@ from fivestone_cnn import open_bl,benchmark_color,benchmark,vs_rand,vs_noth
 SOFTK=3/FiveStone_CNN.WIN_REWARD
 
 class FiveStone_ZERO(FiveStone_CNN):
-    def getPossibleActions(self,target_num=3):
-        """
-        cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_3x3, padding=1)
+    def getPossibleActions(self,target_num=8):
+        """cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_3x3, padding=1)
         #cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_5x5, padding=2)
         l_temp=[(cv[0,0,i,j].item(),(i,j)) for i in range(9) for j in range(9) if cv[0,0,i,j]>0]
         l_temp.sort(key=lambda x:-1*x[0])
-        return [i[1] for i in l_temp]
-        """
+        return [i[1] for i in l_temp]"""
         input_data=self.gen_input().view((1,3,9,9))
         policy,value=self.model(input_data)
         policy=policy.view(9,9)
-        lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if self.board[i,j]==0]
+        #lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if self.board[i,j]==0]
+        cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_3x3, padding=1)
+        lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if cv[0,0,i,j]>0]
         if len(lkv)<target_num:
             return [k for k,v in lkv]
         else:
@@ -33,7 +33,7 @@ class FiveStone_ZERO(FiveStone_CNN):
 
 def gen_data(model,num_games):
     train_datas=[]
-    searcher=abpruning(deep=2,n_killer=2)
+    searcher=abpruning(deep=1,n_killer=2)
     state = FiveStone_ZERO(model)
     for i in range(num_games):
         state.reset()
@@ -59,9 +59,13 @@ def gen_data(model,num_games):
                 target_p[lkv[j][0]]=lv[j]
             legal_mask=(state.board==0).type(torch.cuda.FloatTensor)
 
-            #if best_value.abs()==FiveStone_CNN.WIN_REWARD and not duplicated_flag:
             in_mat=state.gen_input()
-            for j in range(4):
+            if best_value.abs()==FiveStone_CNN.WIN_REWARD and not duplicated_flag:
+                n_dup=4*int((state.board.abs().sum().item()-3)/8+1)
+                duplicated_flag=True
+            else:
+                n_dup=4
+            for j in range(n_dup):
                 this_data=(torch.rot90(in_mat,j,[1,2]),best_value,
                            torch.rot90(target_p,j,[0,1]).reshape(81),
                            torch.rot90(legal_mask,j,[0,1]).reshape(81))
