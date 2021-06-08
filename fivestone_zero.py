@@ -11,11 +11,11 @@ from fivestone_conv import log, pretty_board
 from net_topo import PV_resnet, FiveStone_CNN#, PVnet_cnn
 from fivestone_cnn import open_bl,benchmark_color,benchmark,vs_rand,vs_noth
 
-PARA_DICT={ "ACTION_NUM":12, "AB_DEEP":1, "POSSACT_RAD":1,
+PARA_DICT={ "ACTION_NUM":16, "AB_DEEP":1, "POSSACT_RAD":1,
             "BATCH_SIZE":64, "LOSS_P_WT":4.0, "SOFTK":4/FiveStone_CNN.WIN_REWARD,
-            "VID_THRES_BK": 0.5*FiveStone_CNN.WIN_REWARD, "VID_THRES_WT": -0.5*FiveStone_CNN.WIN_REWARD,
-            "VID_LR":0.2, "VID_MIN_STEP":4, "VID_DUP":100, "UID_ROT":1,
-            "FINAL_LEN": 6}
+            "VID_THRES_BK": 0.2*FiveStone_CNN.WIN_REWARD, "VID_THRES_WT": -0.2*FiveStone_CNN.WIN_REWARD,
+            "VID_LR":0.1, "UID_ROT":4, "VID_DUP_CONST": 8,
+            "FINAL_LEN": 6, "FINAL_BIAS": 0.5}
 
 class FiveStone_ZERO(FiveStone_CNN):
     def getPossibleActions(self,target_num=PARA_DICT["ACTION_NUM"]):
@@ -102,12 +102,13 @@ def gen_data(model,num_games,rot_bias,data_q,PARA_DICT):
             push_data(train_datas,in_mat,best_value,target_p,legal_mask,rots=range(PARA_DICT["UID_ROT"]),flip=True)
 
             if vidata==None\
-                and (best_value>PARA_DICT["VID_THRES_BK"] or best_value<PARA_DICT["VID_THRES_WT"])\
-                and state.board.abs().sum()>=PARA_DICT["VID_MIN_STEP"]:
+                and (   FiveStone_CNN.WIN_REWARD>best_value>PARA_DICT["VID_THRES_BK"] or
+                       -FiveStone_CNN.WIN_REWARD<best_value<PARA_DICT["VID_THRES_WT"] ):
                 vidata=len(train_datas)-1
+                #log("set vidata to %d"%(vidata))
             elif vidata!=None\
-                and ((vidata[1]>0 and best_value<PARA_DICT["VID_THRES_BK"]) or\
-                    (vidata[1]<0 and best_value>PARA_DICT["VID_THRES_WT"])):
+                and ( (train_datas[vidata][1]>0 and best_value<PARA_DICT["VID_THRES_BK"]) or\
+                      (train_datas[vidata][1]<0 and best_value>PARA_DICT["VID_THRES_WT"]) ):
                 vidata=None
 
             #r=torch.multinomial(lv,1)
@@ -121,28 +122,27 @@ def gen_data(model,num_games,rot_bias,data_q,PARA_DICT):
         if vidata!=None and train_datas[vidata][1]*result>0:
             vid_flag=True
             in_mat,best_value,target_p,legal_mask=train_datas[vidata]
+            vid_dup=PARA_DICT["VID_DUP_CONST"]
+            if best_value>0:
+                lre[0]+=(best_value.item()-PARA_DICT["VID_THRES_BK"])
+            else:
+                lre[1]+=(best_value.item()-PARA_DICT["VID_THRES_WT"])
+            num_1=in_mat[0].sum().item()+in_mat[1].sum().item()
             num_2=state.board.abs().sum().item()
-            vid_dup=int((num_2-4)/PARA_DICT["VID_DUP"])
-            if best_value.abs()<FiveStone_CNN.WIN_REWARD:
-                if vidata[1]>0:
-                    lre[0]+=PARA_DICT["VID_LR"]*(vidata[1].item()-PARA_DICT["VID_THRES_BK"])
-                else:
-                    lre[1]+=PARA_DICT["VID_LR"]*(vidata[1].item()-PARA_DICT["VID_THRES_WT"])
-                num_1=in_mat[0].sum().item()+in_mat[1].sum().item()
-                log("correct predict at %d/%d: %.4f! dup %d, thres %.2f, %.2f"\
-                    %(num_1,num_2,best_value,vid_dup,PARA_DICT["VID_THRES_BK"],PARA_DICT["VID_THRES_WT"]))
+            log("correct predict at %d/%d: %.4f! dup %d, thres %.2f, %.2f"\
+                %(num_1,num_2,best_value,vid_dup,PARA_DICT["VID_THRES_BK"],PARA_DICT["VID_THRES_WT"]))
 
         #log("final_result: %.2f, %d, %d, %d"%(result,state.board.abs().sum().item(),dlen_1,dlen_2))
         #log(["%.2f"%(train_datas[i][1]) for i in range(dlen_1,dlen_2)])
         fin_len=PARA_DICT["FINAL_LEN"]*2*PARA_DICT["UID_ROT"]
         for j in range(min(dlen_2-dlen_1,fin_len)):
-            wt=j/fin_len
+            wt=max(0,j/fin_len-PARA_DICT["FINAL_BIAS"])
             train_datas[-j-1][1]=train_datas[-j-1][1]*wt+result*(1-wt)
-        #log(["%.2f"%(train_datas[i][1]) for i in range(dlen_1,dlen_2)])
+        #log(["%.2f"%(train_datas[i][1]) for i in range(dlen_1,dlen_2)]);input()
 
         if vid_flag and vid_dup>0:
-            push_data(train_datas,in_mat,best_value,target_p.view(9,9),legal_mask.view(9,9),rots=range(vid_dup*4),flip=True)
-            del vid_flag,num_2
+            push_data(train_datas,in_mat,best_value,target_p.view(9,9),legal_mask.view(9,9),rots=range(vid_dup*2*PARA_DICT["UID_ROT"]),flip=True)
+            del vid_flag
 
     fd,fname=tempfile.mkstemp(suffix='.fivestone.tmp',prefix='',dir='/tmp')
     with open(fd,"wb") as f:
@@ -162,8 +162,8 @@ def gen_data_multithread(model):
         with open(fname,"rb") as f:
             rlist+=pickle.load(f)
         os.unlink(fname)
-        PARA_DICT["VID_THRES_BK"]+=lre[0]
-        PARA_DICT["VID_THRES_WT"]+=lre[1]
+        PARA_DICT["VID_THRES_BK"]+=lre[0]*PARA_DICT["VID_LR"]
+        PARA_DICT["VID_THRES_WT"]+=lre[1]*PARA_DICT["VID_LR"]
     return rlist
 
 def train(model):
@@ -173,7 +173,7 @@ def train(model):
     log("PARA_DICT: %s"%(PARA_DICT))
 
     for epoch in range(1200):
-        if (epoch<40 and epoch%5==0) or epoch%20==0:
+        if (epoch<60 and epoch%5==0) or epoch%10==0:
             save_name='./model/%s-%s-%s-%d.pkl'%(model.__class__.__name__,model.num_layers(),model.num_paras(),epoch)
             torch.save(model.state_dict(),save_name)
             vs_noth(model,epoch)
@@ -182,9 +182,7 @@ def train(model):
 
         #train_datas = gen_data(model,20,0,None,PARA_DICT)
         train_datas = gen_data_multithread(model)
-        l1=len(train_datas)
         balance_bkwt(train_datas)
-        assert l1*2==len(train_datas)
         trainloader = torch.utils.data.DataLoader(train_datas,batch_size=PARA_DICT["BATCH_SIZE"],shuffle=True,drop_last=True)
 
         if epoch<3 or (epoch<40 and epoch%5==0) or epoch%20==0:
@@ -202,12 +200,16 @@ def train(model):
                 loss_p = F.kl_div(log_p,batch[2],reduction="batchmean")
                 optim.zero_grad()
                 loss_p.backward(retain_graph=True)
-                log("loss_p: %6.4f, grad_p_conv1: %.8f"%(loss_p.item()/PARA_DICT["BATCH_SIZE"],model.conv1.weight.grad.abs().mean().item()))
+                grad_p=model.conv1.weight.grad.abs().mean().item()
+                log("loss_p: %6.4f, grad_p_conv1: %.8f"%(loss_p.item()/PARA_DICT["BATCH_SIZE"],grad_p))
 
                 loss_v = F.mse_loss(batch[1], value, reduction='mean').sqrt()
                 optim.zero_grad()
                 loss_v.backward(retain_graph=True)
+                grad_v=model.conv1.weight.grad.abs().mean().item()
                 log("loss_v: %6.4f, grad_p_conv1: %.8f"%(loss_v.item()/PARA_DICT["BATCH_SIZE"],model.conv1.weight.grad.abs().mean().item()))
+                PARA_DICT["LOSS_P_WT"]+=0.3*(0.5*grad_v/grad_p-PARA_DICT["LOSS_P_WT"])
+                log("update LOSS_P_WT to %.2f"%(PARA_DICT["LOSS_P_WT"]))
                 break
 
         for age in range(3):
