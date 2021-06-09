@@ -11,16 +11,17 @@ from fivestone_conv import log, pretty_board
 from net_topo import PV_resnet, FiveStone_CNN#, PVnet_cnn
 from fivestone_cnn import open_bl,benchmark_color,benchmark,vs_rand,vs_noth
 
-PARA_DICT={ "ACTION_NUM":12, "AB_DEEP":1, "POSSACT_RAD":1, "BATCH_SIZE":64,
+PARA_DICT={ "ACTION_NUM":100, "AB_DEEP":1, "POSSACT_RAD":1, "BATCH_SIZE":64,
             "SOFTK":4/FiveStone_CNN.WIN_REWARD,
-            "LOSS_P_WT":1.0, "LOSS_P_WT_RATIO": 0.3, "STDP_WT": 10.0,
-            "VID_THRES_BK": 0.2*FiveStone_CNN.WIN_REWARD,
-            "VID_THRES_WT": -0.2*FiveStone_CNN.WIN_REWARD,
-            "VID_LR":0.05, "FINAL_LEN": 6, "FINAL_BIAS": 0.5,
-            "UID_ROT": 4, "VID_ROT": 64, "VARP_ROT": 32}
+            "LOSS_P_WT":1.0, "LOSS_P_WT_RATIO": 0.5, "STDP_WT": 5.0,
+            #"VID_THRES_BK": 0.2*FiveStone_CNN.WIN_REWARD,
+            #"VID_THRES_WT": -0.2*FiveStone_CNN.WIN_REWARD,
+            #"VID_LR":0.1, "VID_ROT": 0,  "VARP_ROT": 0,
+            "FINAL_LEN": 6, "FINAL_BIAS": 0.5,
+            "UID_ROT": 4}
 
 class FiveStone_ZERO(FiveStone_CNN):
-    def getPossibleActions(self,target_num=PARA_DICT["ACTION_NUM"]):
+    def getPossibleActions(self):
         """cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_3x3, padding=1)
         #cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_5x5, padding=2)
         l_temp=[(cv[0,0,i,j].item(),(i,j)) for i in range(9) for j in range(9) if cv[0,0,i,j]>0]
@@ -29,20 +30,20 @@ class FiveStone_ZERO(FiveStone_CNN):
         input_data=self.gen_input().view((1,3,9,9))
         policy,value=self.model(input_data)
         policy=policy.view(9,9)
-        if PARA_DICT["POSSACT_RAD"] in (1,2):
-            if PARA_DICT["POSSACT_RAD"]==1:
+        if self.radius in (1,2):
+            if self.radius==1:
                 cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_3x3, padding=1)
-            elif PARA_DICT["POSSACT_RAD"]==2:
+            elif self.radius==2:
                 cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_5x5, padding=2)
             lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if cv[0,0,i,j]>0]
-        elif PARA_DICT["POSSACT_RAD"]>2:
+        elif self.radius>2:
             lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if self.board[i,j]==0]
 
-        if len(lkv)<target_num:
+        if len(lkv)<self.target_num:
             return [k for k,v in lkv]
         else:
             lkv.sort(key=lambda x:x[1],reverse=True)
-            return [lkv[i][0] for i in range(target_num)]
+            return [lkv[i][0] for i in range(self.target_num)]
 
 def push_data(datalist,in_mat,best_value,target_p,legal_mask,rots=[0,],flip=True):
     if flip:
@@ -50,15 +51,13 @@ def push_data(datalist,in_mat,best_value,target_p,legal_mask,rots=[0,],flip=True
         bst_vals=[best_value,best_value]
         tg_ps=[target_p,target_p.flip(1)]
         lg_msks=[legal_mask,legal_mask.flip(1)]
-        lsf=2
     else:
         in_mts=[in_mat,]
         bst_vals=[best_value,]
         tg_ps=[target_p,]
         lg_msks=[legal_mask,]
-        lsf=1
 
-    for rot,i in itertools.product(rots,range(lsf)):
+    for rot,i in itertools.product(rots,range(len(in_mts))):
         this_data=[ in_mts[i].rot90(rot,[1,2]),
                     bst_vals[i],
                     tg_ps[i].rot90(rot,[0,1]).reshape(81),
@@ -70,13 +69,15 @@ def balance_bkwt(datalist):
         in_mat,best_val,target_p,legal_msk=datalist[i]
         in_mat_s=in_mat[(1,0,2),:,:]
         in_mat_s[2,:,:]=-1*in_mat_s[2,:,:]
-        this_data=[in_mat_s,best_val*-1,target_p,legal_msk]
+        this_data=[in_mat_s,-1*best_val,target_p,legal_msk]
         datalist.append(this_data)
 
 def gen_data(model,num_games,rot_bias,data_q,PARA_DICT):
     train_datas=[]
     searcher=abpruning(deep=PARA_DICT["AB_DEEP"])
     state = FiveStone_ZERO(model)
+    state.target_num=PARA_DICT["ACTION_NUM"]
+    state.radius=PARA_DICT["POSSACT_RAD"]
     lre=[0,0]
     for i in range(num_games):
         state.reset()
@@ -103,19 +104,19 @@ def gen_data(model,num_games,rot_bias,data_q,PARA_DICT):
 
             push_data(train_datas,in_mat,best_value,target_p,legal_mask,rots=range(PARA_DICT["UID_ROT"]),flip=True)
 
-            if vidata==None\
-                and (   FiveStone_CNN.WIN_REWARD>best_value>PARA_DICT["VID_THRES_BK"] or
-                       -FiveStone_CNN.WIN_REWARD<best_value<PARA_DICT["VID_THRES_WT"] ):
+            """if vidata==None and best_value.abs()<FiveStone_CNN.WIN_REWARD\
+                and (   best_value>PARA_DICT["VID_THRES_BK"] or
+                        best_value<PARA_DICT["VID_THRES_WT"] ):
                 vidata=len(train_datas)-1
                 #log("set vidata to %d"%(vidata))
             elif vidata!=None\
                 and ( (train_datas[vidata][1]>0 and best_value<PARA_DICT["VID_THRES_BK"]) or\
                       (train_datas[vidata][1]<0 and best_value>PARA_DICT["VID_THRES_WT"]) ):
-                vidata=None
+                vidata=None"""
 
-            stdp=lv.std()
-            if stdp>0.1:
-                push_data(train_datas,in_mat,best_value,target_p,legal_mask,rots=range(PARA_DICT["VARP_ROT"]),flip=True)
+            #stdp=lv.std()
+            #if stdp>0.1:
+            #    push_data(train_datas,in_mat,best_value,target_p,legal_mask,rots=range(PARA_DICT["VARP_ROT"]),flip=True)
 
             #r=torch.multinomial(lv,1)
             #state=state.takeAction(lkv[r][0])
@@ -123,6 +124,20 @@ def gen_data(model,num_games,rot_bias,data_q,PARA_DICT):
         #pretty_board(state);input()
         dlen_2=len(train_datas)
         result=state.getReward().item()
+
+        """
+        vid_dup_flag=False
+        if vidata!=None and train_datas[vidata][1]*result>0:
+            vid_dup_flag=True
+            in_mat,best_value,target_p,legal_mask=train_datas[vidata]
+            if best_value>0:
+                lre[0]+=(best_value.item()-PARA_DICT["VID_THRES_BK"])
+            else:
+                lre[1]+=(best_value.item()-PARA_DICT["VID_THRES_WT"])
+            num_1=in_mat[0].sum().item()+in_mat[1].sum().item()
+            num_2=state.board.abs().sum().item()
+            log("correct predict at %d/%d: %.8f! thres %.2f, %.2f"\
+                %(num_1,num_2,best_value,PARA_DICT["VID_THRES_BK"],PARA_DICT["VID_THRES_WT"]))"""
 
         #log("final_result: %.2f, %d, %d, %d"%(result,state.board.abs().sum().item(),dlen_1,dlen_2))
         #log(["%.2f"%(train_datas[i][1]) for i in range(dlen_1,dlen_2)])
@@ -132,17 +147,9 @@ def gen_data(model,num_games,rot_bias,data_q,PARA_DICT):
             train_datas[-j-1][1]=train_datas[-j-1][1]*wt+result*(1-wt)
         #log(["%.2f"%(train_datas[i][1]) for i in range(dlen_1,dlen_2)]);input()
 
-        if vidata!=None and train_datas[vidata][1]*result>0:
+        """if vid_dup_flag:
             in_mat,best_value,target_p,legal_mask=train_datas[vidata]
-            push_data(train_datas,in_mat,best_value,target_p.view(9,9),legal_mask.view(9,9),rots=range(PARA_DICT["VID_ROT"]),flip=True)
-            if best_value>0:
-                lre[0]+=(best_value.item()-PARA_DICT["VID_THRES_BK"])
-            else:
-                lre[1]+=(best_value.item()-PARA_DICT["VID_THRES_WT"])
-            num_1=in_mat[0].sum().item()+in_mat[1].sum().item()
-            num_2=state.board.abs().sum().item()
-            log("correct predict at %d/%d: %.4f! thres %.2f, %.2f"\
-                %(num_1,num_2,best_value,PARA_DICT["VID_THRES_BK"],PARA_DICT["VID_THRES_WT"]))
+            push_data(train_datas,in_mat,best_value,target_p.view(9,9),legal_mask.view(9,9),rots=range(PARA_DICT["VID_ROT"]),flip=True)"""
 
     fd,fname=tempfile.mkstemp(suffix='.fivestone.tmp',prefix='',dir='/tmp')
     with open(fd,"wb") as f:
@@ -162,18 +169,22 @@ def gen_data_multithread(model):
         with open(fname,"rb") as f:
             rlist+=pickle.load(f)
         os.unlink(fname)
-        PARA_DICT["VID_THRES_BK"]+=lre[0]*PARA_DICT["VID_LR"]
-        PARA_DICT["VID_THRES_WT"]+=lre[1]*PARA_DICT["VID_LR"]
+        #PARA_DICT["VID_THRES_BK"]+=lre[0]*PARA_DICT["VID_LR"]
+        #PARA_DICT["VID_THRES_WT"]+=lre[1]*PARA_DICT["VID_LR"]
     return rlist
 
 def train(model):
     optim = torch.optim.Adam(model.parameters(),lr=0.0005,betas=(0.3,0.999),eps=1e-07,weight_decay=1e-4,amsgrad=False)
-    log(model)
     log("optim: %s"%(optim.__dict__['defaults'],))
     log("PARA_DICT: %s"%(PARA_DICT))
 
-    for epoch in range(1200):
-        if (epoch<60 and epoch%5==0) or epoch%10==0:
+    for epoch in range(800):
+        if epoch<3 or (epoch<40 and epoch%5==0) or epoch%20==0:
+            print_flag=True
+        else:
+            print_flag=False
+
+        if print_flag and epoch%5==0:
             save_name='./model/%s-%s-%s-%d.pkl'%(model.__class__.__name__,model.num_layers(),model.num_paras(),epoch)
             torch.save(model.state_dict(),save_name)
             vs_noth(model,epoch)
@@ -185,17 +196,13 @@ def train(model):
         balance_bkwt(train_datas)
         trainloader = torch.utils.data.DataLoader(train_datas,batch_size=PARA_DICT["BATCH_SIZE"],shuffle=True,drop_last=True)
 
-        if epoch<2 or (epoch<40 and epoch%5==0) or epoch%20==0:
-            print_flag=True
-        else:
-            print_flag=False
-
         if print_flag:
             log("epoch %d with %d datas"%(epoch,len(train_datas)))
             for batch in trainloader:
-                log("sampled value, policy:\n%s\n%s"%(", ".join(["%.1f"%(batch[1][i,0]) for i in range(20)]),
-                                                      ", ".join(["%.2f"%(i.item()) for i in batch[2][0,:] if i!=0]) ))
                 policy,value = model(batch[0])
+                log("sampled output_value, target_policy:\n%s\n%s"%(" ".join(["%.1f"%(i[0]) for i in value][0:32]),
+                                                                    " ".join(["%.2f"%(i) for i in batch[2].std(dim=1)][0:32]) ))
+
                 #log_p = F.log_softmax(policy*batch[3],dim=1)
                 softmax_p = (policy*batch[3]).softmax(dim=1)
                 loss_p = F.kl_div(softmax_p.log(),batch[2],reduction="batchmean")
@@ -242,8 +249,8 @@ def train(model):
 
 def test_must_win(model):
     state = FiveStone_ZERO(model)
-    for i in range(4):
-        state.board[5,4+i]=-1
+    for i in range(3):
+        state.board[4+i,4+i]=-1
     state.currentPlayer=-1
     input_data=state.gen_input().view((1,3,9,9))
     policy,value=state.model(input_data)
@@ -254,6 +261,40 @@ def test_must_win(model):
     log("\n%s"%("\n".join(s)))
     log(value)
     pretty_board(state.takeAction(state.policy_choice_best()))
+
+def get_tui_input(state):
+    pretty_board(state)
+    while True:
+        istr=input("your action: ")
+        r=re.match("[\\-0-9]+([,.])[\\-0-9]+",istr)
+        if r:
+            myaction=tuple([int(i) for i in istr.split(r.group(1))])
+            try:
+                state=state.track_hist([myaction])
+            except:
+                log("take action failed",l=3)
+            else:
+                return state
+        else:
+            log("input format error!")
+
+def play_tui(model):
+    searcher=abpruning(deep=3,n_killer=2)
+    state = FiveStone_ZERO(model)
+    state.target_num=100
+    state.radius=1
+    human_color=-1
+    while not state.isTerminal():
+        if state.currentPlayer==human_color:
+            get_tui_input(state)
+        else:
+            searcher.counter=0
+            log("searching...")
+            searcher.search(initialState=state)
+            log("searched %d cases"%(searcher.counter))
+            best_action=max(searcher.children.items(),key=lambda x: x[1]*state.currentPlayer)
+            log(best_action)
+            state=state.takeAction(best_action[0])
 
 def test_push_data():
     state = FiveStone_ZERO(model)
@@ -267,10 +308,16 @@ def test_push_data():
 
 if __name__=="__main__":
     torch.multiprocessing.set_start_method('spawn')
-    model = PV_resnet().cuda()
+    model=PV_resnet().cuda()
+    start_file=None
     #start_file="./logs/6_1/PV_resnet-16-15857234-180.pkl"
-    #model.load_state_dict(torch.load(start_file,map_location="cuda"))
-    #log("load from %s"%(start_file))
+    #start_file="./logs/8/PV_resnet-16-15857234-40.pkl"
+    if start_file!=None:
+        model.load_state_dict(torch.load(start_file,map_location="cuda"))
+        log("load from %s"%(start_file))
+    else:
+        log("init model %s"%(model))
     #test_must_win(model)
+    #play_tui(model)
     #test_push_data()
     train(model)
