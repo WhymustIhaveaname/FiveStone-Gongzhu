@@ -149,13 +149,13 @@ class FiveStone_CNN(FiveStoneState):
         return value
 
     def gen_input(self):
-        return torch.stack([(self.board==1).float(),
-                            (self.board==-1).float(),
-                            torch.ones(9,9,device="cuda")*self.currentPlayer])
+        return torch.stack([(self.board==1).half(),
+                            (self.board==-1).half(),
+                            torch.ones(9,9,device="cuda",dtype=torch.float16)*self.currentPlayer])
 
     def policy_choice_best(self):
-        input_data=self.gen_input().view((1,3,9,9))
-        policy,value=self.model(input_data)
+        input_data=self.gen_input()
+        policy,value=self.model(input_data.view((1,3,9,9)))
         policy=policy.view(9,9)
         lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if self.board[i,j]==0]
         best=max(lkv,key=lambda x: x[1])

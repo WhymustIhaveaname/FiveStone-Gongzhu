@@ -8,6 +8,8 @@ from torch.multiprocessing import Process,Queue
 
 from MCTS.mcts import abpruning
 from fivestone_conv import log, pretty_board
+
+torch.set_default_dtype(torch.float16)
 from net_topo import PV_resnet, FiveStone_CNN#, PVnet_cnn
 from fivestone_cnn import open_bl,benchmark_color,benchmark,vs_rand,vs_noth
 
@@ -21,6 +23,11 @@ PARA_DICT={ "ACTION_NUM":100, "AB_DEEP":1, "POSSACT_RAD":1, "BATCH_SIZE":64,
             "UID_ROT": 4}
 
 class FiveStone_ZERO(FiveStone_CNN):
+    def reset(self):
+        self.board = torch.zeros(9,9,device="cuda",dtype=torch.float16)
+        self.board[4,4] = 1.0
+        self.currentPlayer = -1
+
     def getPossibleActions(self):
         """cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_3x3, padding=1)
         #cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_5x5, padding=2)
@@ -63,6 +70,7 @@ def push_data(datalist,in_mat,best_value,target_p,legal_mask,rots=[0,],flip=True
                     tg_ps[i].rot90(rot,[0,1]).reshape(81),
                     lg_msks[i].rot90(rot,[0,1]).reshape(81)]
         datalist.append(this_data)
+        #print(this_data[0]);input()
 
 def balance_bkwt(datalist):
     for i in range(len(datalist)):
@@ -89,7 +97,7 @@ def gen_data(model,num_games,randseed,data_q,PARA_DICT):
         state.track_hist(open_bl[open_num],rot=rot_num)
         state.board=state.board.roll(shifts=(shift_x,shift_y),dims=(0,1))
         #log("%d, rot %d, (%d, %d)"%(open_num,rot_num,shift_x,shift_y))
-        #pretty_board(state)
+        #pretty_board(state);input()
         #vidata=None
         dlen_1=len(train_datas)
         while not state.isTerminal():
@@ -176,7 +184,7 @@ def gen_data_multithread(model,num_games):
     plist=[]
     t=int(time.time())
     for i in range(3):
-        plist.append(Process(target=gen_data_sub,args=(copy.deepcopy(model).eval(),num_games,i+t,data_q,PARA_DICT)))
+        plist.append(Process(target=gen_data_sub,args=(copy.deepcopy(model).eval().half(),num_games,i+t,data_q,PARA_DICT)))
         plist[-1].start()
     rlist=[]
     for p in plist:
@@ -205,14 +213,14 @@ def train(model):
         if print_flag and epoch%5==0:
             save_name='./model/%s-%s-%s-%d.pkl'%(model.__class__.__name__,model.num_layers(),model.num_paras(),epoch)
             torch.save(model.state_dict(),save_name)
-            state_nn=FiveStone_ZERO(copy.deepcopy(model).eval())
+            state_nn=FiveStone_ZERO(copy.deepcopy(model).eval().half())
             state_nn.target_num=100
             state_nn.radius=2
             vs_noth(state_nn,epoch)
             vs_rand(state_nn,epoch)
             benchmark(state_nn,epoch)
 
-        #train_datas = gen_data(model,5,time.time(),None,PARA_DICT)
+        #train_datas = gen_data(copy.deepcopy(model).eval().half(),5,time.time(),None,PARA_DICT)
         train_datas = gen_data_multithread(model,10)
         #train_datas = [[i.float(),j.float(),k.float(),l.float()] for i,j,k,l in train_datas]
         balance_bkwt(train_datas)
