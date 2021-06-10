@@ -12,7 +12,7 @@ from net_topo import PV_resnet, FiveStone_CNN#, PVnet_cnn
 from fivestone_cnn import open_bl,benchmark_color,benchmark,vs_rand,vs_noth
 
 PARA_DICT={ "ACTION_NUM":100, "AB_DEEP":1, "POSSACT_RAD":1, "BATCH_SIZE":64,
-            "SOFTK":4/FiveStone_CNN.WIN_REWARD,
+            "SOFTK":4,
             "LOSS_P_WT":1.0, "LOSS_P_WT_RATIO": 0.5, "STDP_WT": 5.0,
             #"VID_THRES_BK": 0.2*FiveStone_CNN.WIN_REWARD,
             #"VID_THRES_WT": -0.2*FiveStone_CNN.WIN_REWARD,
@@ -72,18 +72,25 @@ def balance_bkwt(datalist):
         this_data=[in_mat_s,-1*best_val,target_p,legal_msk]
         datalist.append(this_data)
 
-def gen_data(model,num_games,rot_bias,data_q,PARA_DICT):
+def gen_data(model,num_games,randseed,data_q,PARA_DICT):
     train_datas=[]
     searcher=abpruning(deep=PARA_DICT["AB_DEEP"])
     state = FiveStone_ZERO(model)
     state.target_num=PARA_DICT["ACTION_NUM"]
     state.radius=PARA_DICT["POSSACT_RAD"]
-    lre=[0,0]
+    #lre=[0,0]
+    random.seed(str(randseed))
     for i in range(num_games):
         state.reset()
-        state.track_hist(open_bl[i%len(open_bl)],rot=i//len(open_bl)+rot_bias)
-        state.board.roll(shifts=(random.randint(-2,2),random.randint(-2,2)),dims=(0,1))
-        vidata=None
+        open_num=random.randint(0,len(open_bl)-1)
+        rot_num=random.randint(0,3)
+        shift_x=random.randint(-1,1)
+        shift_y=random.randint(-1,1)
+        state.track_hist(open_bl[open_num],rot=rot_num)
+        state.board=state.board.roll(shifts=(shift_x,shift_y),dims=(0,1))
+        #log("%d, rot %d, (%d, %d)"%(open_num,rot_num,shift_x,shift_y))
+        #pretty_board(state)
+        #vidata=None
         dlen_1=len(train_datas)
         while not state.isTerminal():
             #in_mat and best_value
@@ -95,14 +102,14 @@ def gen_data(model,num_games,rot_bias,data_q,PARA_DICT):
                 best_action,best_value=min(searcher.children.items(),key=lambda x:x[1])
             # target_p and legal_mask
             lkv=[(k,v) for k,v in searcher.children.items()]
-            lv=torch.tensor([v for k,v in lkv])*state.currentPlayer*PARA_DICT["SOFTK"]
-            lv=F.softmax(lv,dim=0)
-            target_p=torch.zeros(9,9,device="cuda")
+            lv=torch.tensor([v for k,v in lkv],dtype=torch.float32)*state.currentPlayer
+            lv=F.softmax(lv*PARA_DICT["SOFTK"],dim=0)
+            target_p=torch.zeros(9,9,device="cuda",dtype=torch.float32)
             for j in range(len(lkv)):
                 target_p[lkv[j][0]]=lv[j]
-            legal_mask=(state.board==0).type(torch.cuda.FloatTensor)
+            legal_mask=(state.board==0).float()
 
-            push_data(train_datas,in_mat,best_value,target_p,legal_mask,rots=range(PARA_DICT["UID_ROT"]),flip=True)
+            push_data(train_datas,in_mat.float(),best_value.float(),target_p,legal_mask,rots=range(PARA_DICT["UID_ROT"]),flip=True)
 
             """if vidata==None and best_value.abs()<FiveStone_CNN.WIN_REWARD\
                 and (   best_value>PARA_DICT["VID_THRES_BK"] or
@@ -150,22 +157,32 @@ def gen_data(model,num_games,rot_bias,data_q,PARA_DICT):
         """if vid_dup_flag:
             in_mat,best_value,target_p,legal_mask=train_datas[vidata]
             push_data(train_datas,in_mat,best_value,target_p.view(9,9),legal_mask.view(9,9),rots=range(PARA_DICT["VID_ROT"]),flip=True)"""
+    return train_datas
 
+def gen_data_sub(model,num_games,randseed,data_q,PARA_DICT):
+    try:
+        datalist=gen_data(model,num_games,randseed,data_q,PARA_DICT)
+    except:
+        log("",l=3)
+        datalist=[]
     fd,fname=tempfile.mkstemp(suffix='.fivestone.tmp',prefix='',dir='/tmp')
     with open(fd,"wb") as f:
-        pickle.dump(train_datas,f)
-    data_q.put((fd,fname,tuple(lre)))
+        pickle.dump(datalist,f)
+    #data_q.put((fd,fname,tuple(lre)))
+    data_q.put((fd,fname))
 
-def gen_data_multithread(model):
+def gen_data_multithread(model,num_games):
     data_q=Queue()
     plist=[]
+    t=int(time.time())
     for i in range(3):
-        plist.append(Process(target=gen_data,args=(copy.deepcopy(model),10,i,data_q,PARA_DICT)))
+        plist.append(Process(target=gen_data_sub,args=(copy.deepcopy(model).eval(),num_games,i+t,data_q,PARA_DICT)))
         plist[-1].start()
     rlist=[]
     for p in plist:
         p.join()
-        fd,fname,lre=data_q.get(False)
+        #fd,fname,lre=data_q.get(False)
+        fd,fname=data_q.get(False)
         with open(fname,"rb") as f:
             rlist+=pickle.load(f)
         os.unlink(fname)
@@ -174,6 +191,7 @@ def gen_data_multithread(model):
     return rlist
 
 def train(model):
+    torch.set_default_dtype(torch.float32)
     optim = torch.optim.Adam(model.parameters(),lr=0.0005,betas=(0.3,0.999),eps=1e-07,weight_decay=1e-4,amsgrad=False)
     log("optim: %s"%(optim.__dict__['defaults'],))
     log("PARA_DICT: %s"%(PARA_DICT))
@@ -187,12 +205,16 @@ def train(model):
         if print_flag and epoch%5==0:
             save_name='./model/%s-%s-%s-%d.pkl'%(model.__class__.__name__,model.num_layers(),model.num_paras(),epoch)
             torch.save(model.state_dict(),save_name)
-            vs_noth(model,epoch)
-            vs_rand(model,epoch)
-            benchmark(model,epoch)
+            state_nn=FiveStone_ZERO(copy.deepcopy(model).eval())
+            state_nn.target_num=100
+            state_nn.radius=2
+            vs_noth(state_nn,epoch)
+            vs_rand(state_nn,epoch)
+            benchmark(state_nn,epoch)
 
-        #train_datas = gen_data(model,20,0,None,PARA_DICT)
-        train_datas = gen_data_multithread(model)
+        #train_datas = gen_data(model,5,time.time(),None,PARA_DICT)
+        train_datas = gen_data_multithread(model,10)
+        #train_datas = [[i.float(),j.float(),k.float(),l.float()] for i,j,k,l in train_datas]
         balance_bkwt(train_datas)
         trainloader = torch.utils.data.DataLoader(train_datas,batch_size=PARA_DICT["BATCH_SIZE"],shuffle=True,drop_last=True)
 
@@ -200,7 +222,7 @@ def train(model):
             log("epoch %d with %d datas"%(epoch,len(train_datas)))
             for batch in trainloader:
                 policy,value = model(batch[0])
-                log("sampled output_value, target_policy:\n%s\n%s"%(" ".join(["%.1f"%(i[0]) for i in value][0:32]),
+                log("sampled output_value, target_policy:\n%s\n%s"%(" ".join(["%.2f"%(i[0]) for i in value][0:32]),
                                                                     " ".join(["%.2f"%(i) for i in batch[2].std(dim=1)][0:32]) ))
 
                 #log_p = F.log_softmax(policy*batch[3],dim=1)
@@ -220,7 +242,7 @@ def train(model):
                 lp_std.backward(retain_graph=True)
                 grad_pv=model.conv1.weight.grad.abs().mean().item()
 
-                log("loss_v: %6.4f, grad_conv1: %.8f"%(loss_v.item()/PARA_DICT["BATCH_SIZE"],grad_v))
+                log("loss_v: %6.4f, grad_conv1: %.8f"%(loss_v.item(),grad_v))
                 log("loss_p: %6.4f, grad_conv1: %.8f"%(loss_p.item(),grad_p))
                 log("lp_std: %6.4f, grad_conv1: %.8f"%(lp_std.item(),grad_pv))
                 PARA_DICT["LOSS_P_WT"]+=0.5*(PARA_DICT["LOSS_P_WT_RATIO"]*grad_v/grad_p-PARA_DICT["LOSS_P_WT"])
@@ -245,7 +267,7 @@ def train(model):
                 optim.step()
                 running_loss += loss_v.item()
             if print_flag and (age<3 or (age+1)%5==0):
-                log("    age %2d: %.6f"%(age,running_loss/(PARA_DICT["BATCH_SIZE"]*ax)))
+                log("    age %2d: %.6f"%(age,running_loss/ax))
 
 def test_must_win(model):
     state = FiveStone_ZERO(model)
@@ -308,6 +330,7 @@ def test_push_data():
 
 if __name__=="__main__":
     torch.multiprocessing.set_start_method('spawn')
+    torch.set_default_dtype(torch.float32)
     model=PV_resnet().cuda()
     start_file=None
     #start_file="./logs/6_1/PV_resnet-16-15857234-180.pkl"

@@ -25,29 +25,22 @@ open_bl=[[(1,1),(2,2)],[(1,1),(2,-2)],
         [(1,1),(2,1)],[(0,1),(2,2)],
         [(1,1),(2,0)],[(0,1),(1,1)]]
 
-def vs_noth(model,epoch):
+def vs_noth(state_nn,epoch):
     searcher=abpruning(deep=1,n_killer=2)
     l_ans=[]
-    state_nn = FiveStone_CNN(model)
     for i1,i2 in itertools.product(range(len(open_bl)),[100,101,102,103]):
         state_nn.reset()
         state_nn.track_hist(open_bl[i1],rot=i2)
         while not state_nn.isTerminal():
             state_nn.currentPlayer=1
             state_nn=state_nn.takeAction(state_nn.policy_choice_best())
-        result=state_nn.getReward()
-        if result==FiveStone_CNN.WIN_REWARD:
-            l_ans.append(state_nn.board.abs().sum().item())
-        else:
-            log("lost in competing nothing! result: %d"%(result))
-            pretty_board(state_nn)
+        l_ans.append(state_nn.board.abs().sum().item())
     log("epoch %d avg win steps: %d/%d=%.1f"%(epoch,sum(l_ans),len(l_ans),sum(l_ans)/len(l_ans)))
 
-def vs_rand(model,epoch):
+def vs_rand(state_nn,epoch):
     searcher=abpruning(deep=1,n_killer=2)
     l_ans=[]
     l_loss=[]
-    state_nn = FiveStone_CNN(model)
     for i1,nn_color,rot in itertools.product(range(len(open_bl)),[-1,1],[100,101,102,103]):
         state_nn.reset()
         state_nn.track_hist(open_bl[i1],rot=rot)
@@ -55,19 +48,18 @@ def vs_rand(model,epoch):
             if state_nn.currentPlayer==nn_color:
                 state_nn=state_nn.takeAction(state_nn.policy_choice_best())
             else:
-                state_nn=state_nn.takeAction(random.choice(state_nn.getPossibleActions(surpress_warning=True)))
+                state_nn=state_nn.takeAction(random.choice(state_nn.getPossibleActions()))
         result=nn_color*state_nn.getReward()
-        if result==FiveStone_CNN.WIN_REWARD:
+        if result==1:
             l_ans.append(state_nn.board.abs().sum().item())
         else:
             l_loss.append(result)
     win_rate=len(l_ans)/(len(l_ans)+len(l_loss))*100
     log("epoch %d avg win steps: %d/%d=%.1f, %.1f%%"%(epoch,sum(l_ans),len(l_ans),sum(l_ans)/len(l_ans),win_rate))
 
-def benchmark_color(model,nn_color,openings,epoch):
+def benchmark_color(state_nn,nn_color,openings,epoch):
     searcher=abpruning(deep=1,n_killer=2)
     l_ans=[]
-    state_nn = FiveStone_CNN(model)
     state_conv = FiveStoneState()
     for i1,i2 in itertools.product(range(len(openings)),[100,101,102,103]):
         state_nn.reset()

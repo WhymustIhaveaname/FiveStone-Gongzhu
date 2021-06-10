@@ -229,7 +229,7 @@ def pretty_board(gamestate):
         lj="|".join([d_stone[j.item()] for j in r])
         li.append("%2d|%s|"%(i,lj))
     li="\n".join(li)
-    log("\n%s"%(li))
+    log("\n%s"%(li),l=0)
     return li
 
 def play_tui():

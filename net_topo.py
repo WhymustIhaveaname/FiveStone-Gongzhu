@@ -107,13 +107,15 @@ class PV_resnet(PVnet_cnn):
         return "%s-%d %s"%(self.__class__.__name__,self.num_conv_layers,self.num_paras())
 
 class FiveStone_CNN(FiveStoneState):
-    kern_5 = FiveStoneState.kern_5.cuda()
+    #kern_5 = FiveStoneState.kern_5.cuda()
+    kern_5_hori = torch.tensor([[[0,0,0,0,0],[0,0,0,0,0],[1/5,1/5,1/5,1/5,1/5],[0,0,0,0,0],[0,0,0,0,0]]],device="cuda")
+    kern_5_diag = torch.tensor([[[1/5,0,0,0,0],[0,1/5,0,0,0],[0,0,1/5,0,0],[0,0,0,1/5,0],[0,0,0,0,1/5]]],device="cuda")
+    kern_5 = torch.stack((kern_5_hori, kern_5_diag, kern_5_hori.rot90(1,[1,2]), kern_5_diag.rot90(1,[1,2])))
     kern_possact_5x5 = torch.tensor([[[[1.,1,1,1,1],[1,2,2,2,1],[1,2,-1024,2,1],[1,2,2,2,1],[1,1,1,1,1]]]],device="cuda")
-    kern_possact_3x3 = torch.tensor([[[[1.,1,1],[1,-1024,1],[1,1,1]]]]).cuda()
-    WIN_REWARD=10.0
+    kern_possact_3x3 = torch.tensor([[[[1.,1,1],[1,-1024,1],[1,1,1]]]],device="cuda")
 
     def __init__(self, model):
-        self.board = torch.zeros(9,9).cuda()
+        self.board = torch.zeros(9,9,device="cuda")
         self.board[4,4] = 1.0
         self.currentPlayer = -1
         self.model = model
@@ -122,7 +124,7 @@ class FiveStone_CNN(FiveStoneState):
         FiveStoneState.reset(self)
         self.board = self.board.cuda()
 
-    def getPossibleActions(self,surpress_warning=False):
+    def getPossibleActions(self):
         if not surpress_warning:
             log("obsolete");input()
         cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_3x3, padding=1)
@@ -134,21 +136,21 @@ class FiveStone_CNN(FiveStoneState):
     def getReward(self):
         conv1 = F.conv2d(self.board.view(1,1,9,9), FiveStone_CNN.kern_5, padding=2)
         if conv1.max() >= 0.9:
-            return torch.tensor([FiveStone_CNN.WIN_REWARD], device="cuda")
+            return torch.tensor([1.0], device="cuda")
         elif conv1.min() <= -0.9:
-            return torch.tensor([-FiveStone_CNN.WIN_REWARD], device="cuda")
+            return torch.tensor([-1.0], device="cuda")
         if self.board.sum()==81:
             return torch.tensor([0.0], device="cuda")
 
         with torch.no_grad():
             input_data=self.gen_input().view((1,3,9,9))
             _,value = self.model(input_data)
-            value=value.view(1).clip(-FiveStone_CNN.WIN_REWARD*0.99,FiveStone_CNN.WIN_REWARD*0.99)
+            value=value.view(1).clip(-0.99,0.99)
         return value
 
     def gen_input(self):
-        return torch.stack([(self.board==1).type(torch.cuda.FloatTensor),
-                            (self.board==-1).type(torch.cuda.FloatTensor),
+        return torch.stack([(self.board==1).float(),
+                            (self.board==-1).float(),
                             torch.ones(9,9,device="cuda")*self.currentPlayer])
 
     def policy_choice_best(self):
