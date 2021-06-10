@@ -1,0 +1,491 @@
+18:02:06 966 [INFO,<module>:350] init model PV_resnet-13 15859346
+18:02:06 966 [INFO,train:204] optim: {'lr': 0.0005, 'betas': (0.3, 0.999), 'eps': 1e-07, 'weight_decay': 0.0001, 'amsgrad': False}
+18:02:06 966 [INFO,train:205] PARA_DICT: {'ACTION_NUM': 100, 'AB_DEEP': 1, 'POSSACT_RAD': 1, 'BATCH_SIZE': 64, 'SOFTK': 4, 'LOSS_P_WT': 1.0, 'LOSS_P_WT_RATIO': 0.5, 'STDP_WT': 5.0, 'FINAL_LEN': 6, 'FINAL_BIAS': 0.5, 'UID_ROT': 4}
+18:02:18 944 [INFO,vs_noth:38] epoch 0 avg win steps: 1079/40=27.0
+18:03:05 857 [INFO,vs_rand:58] epoch 0 avg win steps: 1761/35=50.3, 43.8%
+18:03:26 240 [INFO,benchmark_color:90] epoch 0 nn_color bk: l l l l l l l l l l l l l l l l
+18:03:40 515 [INFO,benchmark_color:90] epoch 0 nn_color wt: l l l l l l l l l l l l l l l l
+18:05:15 737 [INFO,train:230] epoch 0 with 10816 datas
+18:05:15 745 [INFO,train:233] sampled output_value, target_policy:
+0.81 1.05 0.47 1.02 0.82 1.36 -0.05 0.32 0.86 1.66 0.34 -0.08 1.04 1.48 0.58 0.95 1.49 -0.20 0.76 0.01 0.88 1.56 0.60 0.13 0.37 1.30 0.77 1.47 1.12 1.96 0.41 0.63
+0.01 0.01 0.01 0.03 0.02 0.02 0.01 0.01 0.06 0.02 0.02 0.02 0.01 0.01 0.02 0.02 0.02 0.02 0.02 0.01 0.02 0.02 0.03 0.02 0.01 0.01 0.02 0.01 0.02 0.01 0.01 0.02
+18:05:15 771 [INFO,train:253] loss_v: 1.1481, grad_conv1: 0.06699443
+18:05:15 771 [INFO,train:254] loss_p: 1.7843, grad_conv1: 0.02071488
+18:05:15 771 [INFO,train:255] lp_std: 0.0224, grad_conv1: 0.00077105
+18:05:15 771 [INFO,train:257] update LOSS_P_WT to 1.31
+18:05:18 182 [INFO,train:278]     age  0: 1.129132
+18:05:20 600 [INFO,train:278]     age  1: 0.528069
+18:05:23 016 [INFO,train:278]     age  2: 0.470937
+18:06:29 900 [INFO,train:230] epoch 1 with 8384 datas
+18:06:29 907 [INFO,train:233] sampled output_value, target_policy:
+0.17 -0.00 0.11 0.27 0.12 0.14 0.25 0.29 0.29 0.21 0.17 0.46 0.17 -0.04 -0.05 -0.38 -0.05 0.10 -0.09 0.53 0.14 0.23 0.62 -0.14 0.27 0.10 -0.71 0.01 -0.17 0.11 0.29 0.22
+0.02 0.02 0.02 0.02 0.02 0.03 0.02 0.02 0.02 0.02 0.01 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.01 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.03 0.07 0.02
+18:06:29 929 [INFO,train:253] loss_v: 0.5344, grad_conv1: 0.01728321
+18:06:29 930 [INFO,train:254] loss_p: 0.5269, grad_conv1: 0.00667577
+18:06:29 930 [INFO,train:255] lp_std: 0.0142, grad_conv1: 0.00004720
+18:06:29 930 [INFO,train:257] update LOSS_P_WT to 1.30
+18:06:31 810 [INFO,train:278]     age  0: 0.562659
+18:06:33 690 [INFO,train:278]     age  1: 0.484296
+18:06:35 570 [INFO,train:278]     age  2: 0.411610
+18:07:33 129 [INFO,train:230] epoch 2 with 7488 datas
+18:07:33 135 [INFO,train:233] sampled output_value, target_policy:
+0.19 0.15 -0.58 0.12 -0.14 0.20 0.19 -0.10 0.06 -0.46 0.22 0.58 0.13 -0.36 -1.06 -0.53 -0.12 -0.12 -0.17 -0.26 0.38 -0.14 -0.28 -1.08 0.39 -0.04 -0.61 0.15 -0.12 0.49 -0.17 -0.47
+0.02 0.02 0.02 0.02 0.03 0.07 0.02 0.03 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.03 0.02 0.02 0.02 0.02 0.02 0.02 0.05 0.03 0.02
+18:07:33 157 [INFO,train:253] loss_v: 0.5432, grad_conv1: 0.00986906
+18:07:33 157 [INFO,train:254] loss_p: 0.4192, grad_conv1: 0.00355973
+18:07:33 157 [INFO,train:255] lp_std: 0.0165, grad_conv1: 0.00005448
+18:07:33 158 [INFO,train:257] update LOSS_P_WT to 1.34
+18:07:34 837 [INFO,train:278]     age  0: 0.497783
+18:07:36 519 [INFO,train:278]     age  1: 0.428896
+18:07:38 200 [INFO,train:278]     age  2: 0.369751
+18:09:11 203 [INFO,vs_noth:38] epoch 5 avg win steps: 512/40=12.8
+18:09:50 762 [INFO,vs_rand:58] epoch 5 avg win steps: 2814/65=43.3, 81.2%
+18:10:07 597 [INFO,benchmark_color:90] epoch 5 nn_color bk: l l l l l l l l l l l l l l l l
+18:10:21 327 [INFO,benchmark_color:90] epoch 5 nn_color wt: l l l l l l l l l l l l l l l l
+18:11:23 505 [INFO,train:230] epoch 5 with 7232 datas
+18:11:23 512 [INFO,train:233] sampled output_value, target_policy:
+0.27 -0.49 -0.47 0.19 -0.28 -0.29 -0.02 0.11 0.09 -0.30 -0.73 -0.04 0.64 -0.19 -0.74 -0.09 0.23 -0.03 -1.22 -0.17 0.39 -0.18 0.70 0.39 0.13 0.12 0.05 -0.83 0.08 0.07 0.22 0.27
+0.02 0.02 0.04 0.02 0.03 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.03 0.02 0.03 0.03 0.02 0.03 0.02 0.02 0.02 0.02 0.11 0.02 0.02 0.02 0.02 0.11 0.02 0.03 0.03 0.02
+18:11:23 534 [INFO,train:253] loss_v: 0.5987, grad_conv1: 0.00941653
+18:11:23 534 [INFO,train:254] loss_p: 0.6366, grad_conv1: 0.00551533
+18:11:23 534 [INFO,train:255] lp_std: 0.0218, grad_conv1: 0.00011132
+18:11:23 534 [INFO,train:257] update LOSS_P_WT to 1.10
+18:11:25 151 [INFO,train:278]     age  0: 0.540589
+18:11:26 769 [INFO,train:278]     age  1: 0.399204
+18:11:28 387 [INFO,train:278]     age  2: 0.334210
+18:14:30 991 [INFO,vs_noth:38] epoch 10 avg win steps: 277/40=6.9
+18:14:46 921 [INFO,vs_rand:58] epoch 10 avg win steps: 1350/75=18.0, 93.8%
+18:15:00 580 [INFO,benchmark_color:90] epoch 10 nn_color bk: l l w l l l l l l w l l w w w w
+18:15:11 570 [INFO,benchmark_color:90] epoch 10 nn_color wt: l l l l w l l l l l l l w l w w
+18:15:55 687 [INFO,train:230] epoch 10 with 5584 datas
+18:15:55 694 [INFO,train:233] sampled output_value, target_policy:
+0.70 0.81 -0.63 0.79 -0.45 -0.92 -0.72 0.47 -0.29 0.10 0.86 0.31 -0.98 -0.42 0.70 -0.40 0.24 -0.96 0.85 -0.75 0.19 -1.84 0.41 -0.57 -0.09 0.07 0.24 0.47 -0.26 -0.93 -0.36 -0.98
+0.05 0.04 0.06 0.03 0.03 0.02 0.02 0.03 0.02 0.05 0.02 0.08 0.02 0.05 0.03 0.05 0.05 0.02 0.05 0.03 0.03 0.02 0.03 0.02 0.06 0.04 0.03 0.08 0.03 0.02 0.05 0.02
+18:15:55 716 [INFO,train:253] loss_v: 0.5910, grad_conv1: 0.01340313
+18:15:55 716 [INFO,train:254] loss_p: 0.4376, grad_conv1: 0.00458686
+18:15:55 716 [INFO,train:255] lp_std: 0.0255, grad_conv1: 0.00015866
+18:15:55 717 [INFO,train:257] update LOSS_P_WT to 1.28
+18:15:56 961 [INFO,train:278]     age  0: 0.427465
+18:15:58 208 [INFO,train:278]     age  1: 0.320086
+18:15:59 459 [INFO,train:278]     age  2: 0.268859
+18:19:13 192 [INFO,vs_noth:38] epoch 15 avg win steps: 280/40=7.0
+18:19:32 731 [INFO,vs_rand:58] epoch 15 avg win steps: 1542/74=20.8, 92.5%
+18:19:50 514 [INFO,benchmark_color:90] epoch 15 nn_color bk: l w l l l l l l l l l l l l w w
+18:20:01 541 [INFO,benchmark_color:90] epoch 15 nn_color wt: l l l l l l l l l l l l w w w w
+18:20:41 746 [INFO,train:230] epoch 15 with 5424 datas
+18:20:41 753 [INFO,train:233] sampled output_value, target_policy:
+0.61 0.12 0.37 0.16 -0.10 -0.91 -0.58 0.03 0.15 0.55 0.84 0.86 -0.32 -0.76 -0.24 -0.14 0.04 0.27 -0.12 0.15 -0.66 0.46 -1.10 -0.10 0.33 0.41 -0.76 0.35 -0.58 0.47 -0.36 0.32
+0.03 0.02 0.04 0.04 0.02 0.02 0.03 0.02 0.03 0.03 0.02 0.02 0.02 0.03 0.02 0.02 0.06 0.04 0.04 0.02 0.06 0.06 0.02 0.02 0.03 0.04 0.09 0.02 0.03 0.03 0.02 0.04
+18:20:41 773 [INFO,train:253] loss_v: 0.5343, grad_conv1: 0.00960736
+18:20:41 773 [INFO,train:254] loss_p: 0.2981, grad_conv1: 0.00396364
+18:20:41 773 [INFO,train:255] lp_std: 0.0251, grad_conv1: 0.00015668
+18:20:41 773 [INFO,train:257] update LOSS_P_WT to 1.25
+18:20:42 978 [INFO,train:278]     age  0: 0.481591
+18:20:44 178 [INFO,train:278]     age  1: 0.334474
+18:20:45 378 [INFO,train:278]     age  2: 0.289122
+18:24:11 439 [INFO,vs_noth:38] epoch 20 avg win steps: 274/40=6.8
+18:24:25 015 [INFO,vs_rand:58] epoch 20 avg win steps: 1156/76=15.2, 95.0%
+18:24:41 464 [INFO,benchmark_color:90] epoch 20 nn_color bk: l l l l l l l l l w l l w l w w
+18:24:53 019 [INFO,benchmark_color:90] epoch 20 nn_color wt: l l l w l l l l l l l l w w w w
+18:25:29 041 [INFO,train:230] epoch 20 with 4768 datas
+18:25:29 049 [INFO,train:233] sampled output_value, target_policy:
+-0.87 -0.72 -0.74 0.39 -0.52 -0.67 0.74 -0.87 -0.83 -0.87 0.04 -1.14 -0.81 0.12 -0.46 -0.26 0.11 0.58 -0.71 0.48 0.57 0.78 0.80 0.61 -0.77 0.33 0.81 0.48 -0.92 -0.36 -0.05 0.40
+0.10 0.08 0.08 0.05 0.04 0.11 0.05 0.03 0.02 0.10 0.05 0.02 0.02 0.07 0.02 0.03 0.08 0.02 0.02 0.03 0.05 0.04 0.02 0.06 0.05 0.02 0.05 0.02 0.06 0.05 0.05 0.10
+18:25:29 071 [INFO,train:253] loss_v: 0.8454, grad_conv1: 0.01475380
+18:25:29 071 [INFO,train:254] loss_p: 0.5503, grad_conv1: 0.00712128
+18:25:29 071 [INFO,train:255] lp_std: 0.0290, grad_conv1: 0.00038896
+18:25:29 071 [INFO,train:257] update LOSS_P_WT to 1.14
+18:25:30 128 [INFO,train:278]     age  0: 0.528503
+18:25:31 185 [INFO,train:278]     age  1: 0.351335
+18:25:32 244 [INFO,train:278]     age  2: 0.286291
+18:28:29 547 [INFO,vs_noth:38] epoch 25 avg win steps: 267/40=6.7
+18:28:37 174 [INFO,vs_rand:58] epoch 25 avg win steps: 864/80=10.8, 100.0%
+18:28:59 450 [INFO,benchmark_color:90] epoch 25 nn_color bk: w l l l l l l l l l l l l l l l
+18:29:10 185 [INFO,benchmark_color:90] epoch 25 nn_color wt: l w w w w l l l l l w l w w w w
+18:29:43 332 [INFO,train:230] epoch 25 with 4592 datas
+18:29:43 340 [INFO,train:233] sampled output_value, target_policy:
+-0.87 0.32 0.41 0.12 0.26 0.41 -0.56 0.60 -0.29 0.15 0.33 0.56 -0.78 0.16 0.36 -0.70 0.14 -0.75 0.29 0.70 -0.52 -0.52 -0.32 0.46 -0.54 -0.56 0.25 0.29 -0.44 0.82 -0.04 0.49
+0.02 0.03 0.03 0.03 0.04 0.04 0.02 0.03 0.04 0.05 0.06 0.01 0.05 0.04 0.02 0.02 0.04 0.02 0.02 0.02 0.07 0.07 0.02 0.04 0.03 0.02 0.02 0.03 0.05 0.03 0.04 0.02
+18:29:43 362 [INFO,train:253] loss_v: 0.5444, grad_conv1: 0.00905312
+18:29:43 362 [INFO,train:254] loss_p: 0.3722, grad_conv1: 0.00821658
+18:29:43 362 [INFO,train:255] lp_std: 0.0312, grad_conv1: 0.00074610
+18:29:43 362 [INFO,train:257] update LOSS_P_WT to 0.85
+18:29:44 375 [INFO,train:278]     age  0: 0.451553
+18:29:45 390 [INFO,train:278]     age  1: 0.311087
+18:29:46 405 [INFO,train:278]     age  2: 0.267405
+18:32:18 573 [INFO,vs_noth:38] epoch 30 avg win steps: 312/40=7.8
+18:32:27 257 [INFO,vs_rand:58] epoch 30 avg win steps: 956/80=11.9, 100.0%
+18:32:50 152 [INFO,benchmark_color:90] epoch 30 nn_color bk: w l w l l l l l l l l l l l l l
+18:33:02 865 [INFO,benchmark_color:90] epoch 30 nn_color wt: l l l w l l l l l l l w w w w w
+18:33:33 130 [INFO,train:230] epoch 30 with 3904 datas
+18:33:33 137 [INFO,train:233] sampled output_value, target_policy:
+-0.67 0.94 0.59 0.61 -0.39 0.96 0.70 -0.27 -0.63 0.23 -0.08 0.75 0.66 -0.22 1.18 -0.49 0.81 -0.63 -0.19 -0.18 -0.19 0.52 0.30 -0.51 0.72 0.15 0.39 -0.15 0.02 -0.02 -0.49 0.36
+0.10 0.10 0.02 0.02 0.07 0.03 0.03 0.02 0.08 0.10 0.01 0.02 0.02 0.08 0.02 0.05 0.02 0.06 0.02 0.02 0.02 0.10 0.05 0.04 0.02 0.06 0.08 0.06 0.05 0.07 0.06 0.05
+18:33:33 158 [INFO,train:253] loss_v: 0.6157, grad_conv1: 0.01494202
+18:33:33 158 [INFO,train:254] loss_p: 0.6659, grad_conv1: 0.00970209
+18:33:33 158 [INFO,train:255] lp_std: 0.0273, grad_conv1: 0.00024100
+18:33:33 158 [INFO,train:257] update LOSS_P_WT to 0.81
+18:33:34 024 [INFO,train:278]     age  0: 0.417916
+18:33:34 898 [INFO,train:278]     age  1: 0.285830
+18:33:35 770 [INFO,train:278]     age  2: 0.230593
+18:36:27 241 [INFO,vs_noth:38] epoch 35 avg win steps: 262/40=6.5
+18:36:35 311 [INFO,vs_rand:58] epoch 35 avg win steps: 902/80=11.3, 100.0%
+18:37:00 657 [INFO,benchmark_color:90] epoch 35 nn_color bk: l w l l l l l l l l l l l l l l
+18:37:16 407 [INFO,benchmark_color:90] epoch 35 nn_color wt: l l l l l l l l l l l l l l l l
+18:37:50 044 [INFO,train:230] epoch 35 with 4224 datas
+18:37:50 051 [INFO,train:233] sampled output_value, target_policy:
+-0.80 -0.86 0.89 0.22 0.57 -0.14 0.72 0.48 0.38 -0.78 0.60 -0.11 -1.02 0.84 -0.46 0.68 0.75 -0.94 -0.26 0.01 -0.36 0.96 -0.13 -0.99 0.41 -0.55 -0.50 -0.68 -0.49 0.52 -0.80 0.69
+0.05 0.05 0.08 0.05 0.11 0.06 0.03 0.10 0.05 0.03 0.03 0.03 0.06 0.02 0.06 0.02 0.02 0.08 0.03 0.07 0.03 0.02 0.06 0.03 0.08 0.09 0.09 0.04 0.03 0.11 0.04 0.03
+18:37:50 073 [INFO,train:253] loss_v: 0.7740, grad_conv1: 0.02167016
+18:37:50 073 [INFO,train:254] loss_p: 0.5385, grad_conv1: 0.00764390
+18:37:50 073 [INFO,train:255] lp_std: 0.0297, grad_conv1: 0.00025306
+18:37:50 073 [INFO,train:257] update LOSS_P_WT to 1.11
+18:37:51 007 [INFO,train:278]     age  0: 0.409592
+18:37:51 947 [INFO,train:278]     age  1: 0.262327
+18:37:52 886 [INFO,train:278]     age  2: 0.197875
+18:40:51 373 [INFO,vs_noth:38] epoch 40 avg win steps: 260/40=6.5
+18:40:58 646 [INFO,vs_rand:58] epoch 40 avg win steps: 856/80=10.7, 100.0%
+18:41:21 992 [INFO,benchmark_color:90] epoch 40 nn_color bk: l l l l l l l l l l l l w w w w
+18:41:39 346 [INFO,benchmark_color:90] epoch 40 nn_color wt: l l l l l l l l l l l l l l l w
+18:42:21 605 [INFO,train:230] epoch 40 with 5216 datas
+18:42:21 612 [INFO,train:233] sampled output_value, target_policy:
+-0.54 -0.56 0.89 0.57 -0.25 0.81 0.00 -0.73 -0.26 0.77 -0.73 0.10 -0.38 -0.85 -0.54 -0.92 -0.41 -0.96 -1.10 0.91 0.89 -0.61 0.84 -0.65 0.81 -0.26 -0.70 0.88 0.16 0.78 -0.11 0.74
+0.02 0.02 0.10 0.11 0.02 0.02 0.03 0.02 0.03 0.01 0.04 0.04 0.03 0.07 0.02 0.07 0.09 0.07 0.02 0.02 0.07 0.03 0.02 0.03 0.02 0.03 0.02 0.09 0.02 0.01 0.02 0.04
+18:42:21 634 [INFO,train:253] loss_v: 0.6637, grad_conv1: 0.01755564
+18:42:21 634 [INFO,train:254] loss_p: 0.5160, grad_conv1: 0.00835294
+18:42:21 635 [INFO,train:255] lp_std: 0.0301, grad_conv1: 0.00018077
+18:42:21 635 [INFO,train:257] update LOSS_P_WT to 1.08
+18:42:22 788 [INFO,train:278]     age  0: 0.414235
+18:42:23 944 [INFO,train:278]     age  1: 0.259039
+18:42:25 101 [INFO,train:278]     age  2: 0.234702
+18:55:16 800 [INFO,vs_noth:38] epoch 60 avg win steps: 260/40=6.5
+18:55:24 074 [INFO,vs_rand:58] epoch 60 avg win steps: 854/80=10.7, 100.0%
+18:55:47 899 [INFO,benchmark_color:90] epoch 60 nn_color bk: l w l l w l w w l l l l l w w l
+18:56:00 649 [INFO,benchmark_color:90] epoch 60 nn_color wt: l l l l l l l l l l l l w w w w
+18:56:43 201 [INFO,train:230] epoch 60 with 5568 datas
+18:56:43 209 [INFO,train:233] sampled output_value, target_policy:
+0.74 -0.60 -0.94 0.36 -0.25 -0.15 0.16 -0.45 -0.26 0.36 0.54 -0.52 0.09 -0.84 -0.06 -0.35 0.74 -0.63 0.28 -0.25 0.68 -0.02 0.10 -0.07 0.93 0.11 -0.62 -0.42 -0.09 0.51 0.57 0.47
+0.02 0.01 0.08 0.02 0.03 0.02 0.05 0.03 0.09 0.05 0.09 0.02 0.04 0.09 0.02 0.03 0.05 0.03 0.04 0.06 0.05 0.02 0.02 0.02 0.02 0.02 0.08 0.07 0.06 0.02 0.02 0.04
+18:56:43 231 [INFO,train:253] loss_v: 0.5655, grad_conv1: 0.00951116
+18:56:43 231 [INFO,train:254] loss_p: 0.4828, grad_conv1: 0.00528077
+18:56:43 231 [INFO,train:255] lp_std: 0.0251, grad_conv1: 0.00013497
+18:56:43 231 [INFO,train:257] update LOSS_P_WT to 0.99
+18:56:44 466 [INFO,train:278]     age  0: 0.470599
+18:56:45 704 [INFO,train:278]     age  1: 0.308582
+18:56:46 942 [INFO,train:278]     age  2: 0.269376
+19:11:31 694 [INFO,vs_noth:38] epoch 80 avg win steps: 422/40=10.6
+19:11:39 953 [INFO,vs_rand:58] epoch 80 avg win steps: 922/80=11.5, 100.0%
+19:12:05 978 [INFO,benchmark_color:90] epoch 80 nn_color bk: l l w w w w l l l l l w w l l w
+19:12:24 999 [INFO,benchmark_color:90] epoch 80 nn_color wt: l l l l l l l l w l l l w w l w
+19:13:04 198 [INFO,train:230] epoch 80 with 4960 datas
+19:13:04 206 [INFO,train:233] sampled output_value, target_policy:
+0.50 -0.27 -0.13 -0.03 -0.28 0.02 0.89 -0.88 -0.08 -0.82 -0.27 0.88 0.26 0.17 0.79 1.03 0.36 0.30 0.42 -0.59 -0.24 -0.55 0.14 0.37 -0.51 0.46 0.32 -0.40 0.97 0.46 0.77 0.56
+0.02 0.02 0.06 0.09 0.03 0.02 0.01 0.03 0.02 0.02 0.07 0.02 0.04 0.03 0.04 0.04 0.03 0.02 0.04 0.06 0.10 0.07 0.05 0.03 0.03 0.03 0.02 0.05 0.02 0.04 0.03 0.09
+19:13:04 228 [INFO,train:253] loss_v: 0.4944, grad_conv1: 0.00901187
+19:13:04 229 [INFO,train:254] loss_p: 0.3596, grad_conv1: 0.00506016
+19:13:04 229 [INFO,train:255] lp_std: 0.0306, grad_conv1: 0.00017050
+19:13:04 229 [INFO,train:257] update LOSS_P_WT to 0.94
+19:13:05 318 [INFO,train:278]     age  0: 0.313513
+19:13:06 403 [INFO,train:278]     age  1: 0.195195
+19:13:07 489 [INFO,train:278]     age  2: 0.166651
+19:28:47 508 [INFO,vs_noth:38] epoch 100 avg win steps: 377/40=9.4
+19:28:57 016 [INFO,vs_rand:58] epoch 100 avg win steps: 1058/80=13.2, 100.0%
+19:29:19 819 [INFO,benchmark_color:90] epoch 100 nn_color bk: w l l w l w l l l l l w l w w w
+19:29:35 185 [INFO,benchmark_color:90] epoch 100 nn_color wt: l l l l l w l l w w l l w l l w
+19:30:11 161 [INFO,train:230] epoch 100 with 4992 datas
+19:30:11 169 [INFO,train:233] sampled output_value, target_policy:
+0.33 -0.39 0.49 0.64 0.49 0.09 -0.78 0.71 0.28 -0.31 0.67 0.04 -0.36 0.82 -0.70 -0.07 0.71 -0.88 0.60 0.57 0.52 0.40 -0.49 -0.52 0.46 -0.24 -0.83 -0.55 -0.48 -0.50 0.12 0.38
+0.02 0.04 0.03 0.02 0.02 0.04 0.03 0.04 0.06 0.08 0.02 0.08 0.03 0.02 0.02 0.03 0.02 0.03 0.04 0.03 0.05 0.03 0.02 0.03 0.04 0.05 0.02 0.03 0.07 0.04 0.05 0.02
+19:30:11 189 [INFO,train:253] loss_v: 0.7656, grad_conv1: 0.01121089
+19:30:11 189 [INFO,train:254] loss_p: 0.4449, grad_conv1: 0.00466937
+19:30:11 189 [INFO,train:255] lp_std: 0.0290, grad_conv1: 0.00015228
+19:30:11 189 [INFO,train:257] update LOSS_P_WT to 1.07
+19:30:12 289 [INFO,train:278]     age  0: 0.425266
+19:30:13 388 [INFO,train:278]     age  1: 0.252580
+19:30:14 488 [INFO,train:278]     age  2: 0.195155
+19:45:09 988 [INFO,vs_noth:38] epoch 120 avg win steps: 352/40=8.8
+19:45:18 389 [INFO,vs_rand:58] epoch 120 avg win steps: 962/80=12.0, 100.0%
+19:45:38 577 [INFO,benchmark_color:90] epoch 120 nn_color bk: l w l l l l l l l l l l w w w l
+19:45:53 475 [INFO,benchmark_color:90] epoch 120 nn_color wt: l l l l l l l l l l l l w w w w
+19:46:31 466 [INFO,train:230] epoch 120 with 5168 datas
+19:46:31 474 [INFO,train:233] sampled output_value, target_policy:
+-0.69 -0.58 -0.41 -0.32 0.41 -0.42 0.85 0.38 -0.64 -0.90 0.20 -0.41 0.63 -0.34 1.02 0.80 0.40 0.24 0.14 -0.73 -0.62 -0.59 0.99 -0.78 -0.66 0.01 -0.17 0.03 -0.59 -0.35 0.47 -0.35
+0.03 0.03 0.03 0.04 0.02 0.09 0.04 0.07 0.05 0.04 0.04 0.09 0.02 0.06 0.02 0.02 0.05 0.05 0.05 0.04 0.03 0.04 0.08 0.06 0.04 0.03 0.05 0.11 0.07 0.02 0.06 0.01
+19:46:31 496 [INFO,train:253] loss_v: 0.6060, grad_conv1: 0.01087852
+19:46:31 496 [INFO,train:254] loss_p: 0.3809, grad_conv1: 0.00402927
+19:46:31 496 [INFO,train:255] lp_std: 0.0320, grad_conv1: 0.00018790
+19:46:31 496 [INFO,train:257] update LOSS_P_WT to 1.21
+19:46:32 621 [INFO,train:278]     age  0: 0.364619
+19:46:33 751 [INFO,train:278]     age  1: 0.227407
+19:46:34 881 [INFO,train:278]     age  2: 0.163562
+20:03:21 926 [INFO,vs_noth:38] epoch 140 avg win steps: 267/40=6.7
+20:03:29 636 [INFO,vs_rand:58] epoch 140 avg win steps: 872/80=10.9, 100.0%
+20:03:56 858 [INFO,benchmark_color:90] epoch 140 nn_color bk: w w l l l l w l w w l l w l l l
+20:04:12 787 [INFO,benchmark_color:90] epoch 140 nn_color wt: w l l l l w l l l l l w w w w w
+20:04:40 535 [INFO,benchmark_color:90] epoch 140 nn_color bk: w w l l l l l l w l l l l l l l l l l l l l l l l l l l l l w l l w l l l w l l
+20:05:24 775 [INFO,train:230] epoch 140 with 5696 datas
+20:05:24 783 [INFO,train:233] sampled output_value, target_policy:
+-0.65 0.67 -0.63 0.33 -0.18 0.04 -0.62 0.41 0.49 -0.26 -0.91 0.60 -0.47 0.20 -0.90 -0.34 0.71 -0.80 -0.26 0.87 0.91 0.56 -0.07 0.31 0.12 -0.90 0.24 -0.56 -0.01 0.16 -0.20 0.37
+0.06 0.11 0.06 0.01 0.06 0.03 0.03 0.02 0.03 0.02 0.02 0.02 0.04 0.03 0.02 0.03 0.03 0.05 0.03 0.02 0.02 0.03 0.04 0.04 0.04 0.11 0.05 0.02 0.02 0.03 0.03 0.02
+20:05:24 805 [INFO,train:253] loss_v: 0.4962, grad_conv1: 0.00992132
+20:05:24 806 [INFO,train:254] loss_p: 0.3043, grad_conv1: 0.00294877
+20:05:24 806 [INFO,train:255] lp_std: 0.0264, grad_conv1: 0.00011221
+20:05:24 806 [INFO,train:257] update LOSS_P_WT to 1.45
+20:05:26 053 [INFO,train:278]     age  0: 0.298136
+20:05:27 307 [INFO,train:278]     age  1: 0.191180
+20:05:28 557 [INFO,train:278]     age  2: 0.149716
+20:21:17 480 [INFO,vs_noth:38] epoch 160 avg win steps: 266/40=6.7
+20:21:24 938 [INFO,vs_rand:58] epoch 160 avg win steps: 844/80=10.6, 100.0%
+20:21:43 951 [INFO,benchmark_color:90] epoch 160 nn_color bk: l w l l l l l l w w w l w w w w
+20:21:59 454 [INFO,benchmark_color:90] epoch 160 nn_color wt: w l l l l l l l l l l l l w w w
+20:22:43 294 [INFO,train:230] epoch 160 with 5136 datas
+20:22:43 302 [INFO,train:233] sampled output_value, target_policy:
+-0.70 0.28 0.88 0.60 -0.31 -0.70 0.12 0.15 0.31 -0.63 -0.26 -0.56 0.59 0.09 0.58 -0.42 -0.57 -0.32 0.08 0.19 0.68 -0.69 0.33 0.62 0.57 -0.01 0.17 0.41 -0.34 -0.10 0.79 -0.18
+0.02 0.04 0.04 0.02 0.03 0.03 0.05 0.08 0.03 0.02 0.02 0.02 0.07 0.08 0.03 0.03 0.05 0.03 0.07 0.04 0.07 0.02 0.03 0.03 0.04 0.03 0.03 0.04 0.05 0.03 0.02 0.02
+20:22:43 324 [INFO,train:253] loss_v: 0.6349, grad_conv1: 0.00760019
+20:22:43 325 [INFO,train:254] loss_p: 0.3939, grad_conv1: 0.00321913
+20:22:43 325 [INFO,train:255] lp_std: 0.0281, grad_conv1: 0.00015249
+20:22:43 325 [INFO,train:257] update LOSS_P_WT to 1.31
+20:22:44 444 [INFO,train:278]     age  0: 0.355417
+20:22:45 566 [INFO,train:278]     age  1: 0.186118
+20:22:46 688 [INFO,train:278]     age  2: 0.141638
+20:39:14 315 [INFO,vs_noth:38] epoch 180 avg win steps: 308/40=7.7
+20:39:22 699 [INFO,vs_rand:58] epoch 180 avg win steps: 950/80=11.9, 100.0%
+20:39:52 207 [INFO,benchmark_color:90] epoch 180 nn_color bk: w l w w l w l w l w w l w w l l
+20:40:15 461 [INFO,benchmark_color:90] epoch 180 nn_color wt: l l l l l l l l l w w w w w l l
+20:40:59 303 [INFO,train:230] epoch 180 with 5504 datas
+20:40:59 312 [INFO,train:233] sampled output_value, target_policy:
+-0.19 0.61 -0.32 -0.70 0.54 0.53 -0.65 -0.49 -0.02 0.12 -0.15 0.75 -0.62 -0.30 0.60 -0.37 0.01 -0.32 -0.31 0.64 0.27 0.64 -0.51 0.45 -0.12 -0.34 -0.53 -0.49 -0.58 -0.11 -0.50 0.09
+0.05 0.03 0.04 0.02 0.04 0.06 0.03 0.02 0.03 0.02 0.02 0.01 0.03 0.03 0.04 0.05 0.03 0.03 0.03 0.03 0.03 0.04 0.06 0.05 0.03 0.04 0.06 0.02 0.10 0.04 0.03 0.03
+20:40:59 334 [INFO,train:253] loss_v: 0.6143, grad_conv1: 0.00625619
+20:40:59 334 [INFO,train:254] loss_p: 0.3307, grad_conv1: 0.00268360
+20:40:59 334 [INFO,train:255] lp_std: 0.0285, grad_conv1: 0.00010686
+20:40:59 334 [INFO,train:257] update LOSS_P_WT to 1.24
+20:41:00 536 [INFO,train:278]     age  0: 0.395671
+20:41:01 740 [INFO,train:278]     age  1: 0.204769
+20:41:02 946 [INFO,train:278]     age  2: 0.159909
+20:58:30 356 [INFO,vs_noth:38] epoch 200 avg win steps: 290/40=7.2
+20:58:38 174 [INFO,vs_rand:58] epoch 200 avg win steps: 910/80=11.4, 100.0%
+20:59:00 761 [INFO,benchmark_color:90] epoch 200 nn_color bk: w l l w l l l l l w w w l l l w
+20:59:23 821 [INFO,benchmark_color:90] epoch 200 nn_color wt: w l l w l l l l l l l l l l w w
+21:00:18 426 [INFO,train:230] epoch 200 with 6624 datas
+21:00:18 435 [INFO,train:233] sampled output_value, target_policy:
+-0.34 0.34 0.59 -0.37 -0.06 -0.24 -0.37 0.01 -0.55 0.60 -0.21 -0.24 0.16 0.64 -0.09 0.91 -0.65 -0.13 -0.67 0.77 -0.56 0.10 -0.43 0.25 0.71 -0.30 -0.22 0.20 -0.56 -0.37 -0.14 0.36
+0.02 0.02 0.02 0.05 0.05 0.03 0.04 0.02 0.06 0.07 0.03 0.02 0.02 0.02 0.02 0.02 0.08 0.01 0.04 0.02 0.03 0.03 0.04 0.04 0.03 0.04 0.04 0.06 0.02 0.03 0.03 0.02
+21:00:18 456 [INFO,train:253] loss_v: 0.4574, grad_conv1: 0.00745292
+21:00:18 457 [INFO,train:254] loss_p: 0.2816, grad_conv1: 0.00203379
+21:00:18 457 [INFO,train:255] lp_std: 0.0265, grad_conv1: 0.00009402
+21:00:18 457 [INFO,train:257] update LOSS_P_WT to 1.54
+21:00:19 898 [INFO,train:278]     age  0: 0.272925
+21:00:21 344 [INFO,train:278]     age  1: 0.157631
+21:00:22 791 [INFO,train:278]     age  2: 0.128291
+21:16:48 449 [INFO,vs_noth:38] epoch 220 avg win steps: 285/40=7.1
+21:16:56 919 [INFO,vs_rand:58] epoch 220 avg win steps: 930/80=11.6, 100.0%
+21:17:25 301 [INFO,benchmark_color:90] epoch 220 nn_color bk: w l l l w w l l w l l l w w l l
+21:17:43 677 [INFO,benchmark_color:90] epoch 220 nn_color wt: l w l l l l w l l l l l w w w w
+21:18:25 580 [INFO,train:230] epoch 220 with 5472 datas
+21:18:25 589 [INFO,train:233] sampled output_value, target_policy:
+-0.87 -0.52 0.74 -0.60 0.79 -0.80 0.51 0.83 0.27 -0.07 0.00 0.73 0.54 0.78 0.42 -0.07 -0.86 0.22 0.16 0.50 -0.12 -0.76 0.26 -0.74 -0.76 -0.66 0.71 0.35 0.22 -0.55 -0.32 -0.38
+0.02 0.04 0.05 0.06 0.02 0.04 0.05 0.02 0.02 0.05 0.05 0.06 0.06 0.02 0.02 0.03 0.02 0.02 0.09 0.04 0.03 0.06 0.03 0.05 0.05 0.03 0.03 0.02 0.08 0.02 0.02 0.02
+21:18:25 612 [INFO,train:253] loss_v: 0.6132, grad_conv1: 0.00661437
+21:18:25 612 [INFO,train:254] loss_p: 0.2722, grad_conv1: 0.00291833
+21:18:25 612 [INFO,train:255] lp_std: 0.0293, grad_conv1: 0.00014014
+21:18:25 612 [INFO,train:257] update LOSS_P_WT to 1.33
+21:18:26 805 [INFO,train:278]     age  0: 0.274935
+21:18:27 001 [INFO,train:278]     age  1: 0.138609
+21:18:29 198 [INFO,train:278]     age  2: 0.111818
+21:35:52 009 [INFO,vs_noth:38] epoch 240 avg win steps: 256/40=6.4
+21:35:59 438 [INFO,vs_rand:58] epoch 240 avg win steps: 838/80=10.5, 100.0%
+21:36:17 869 [INFO,benchmark_color:90] epoch 240 nn_color bk: w w w l w w l w w w w w w w w w
+21:36:43 127 [INFO,benchmark_color:90] epoch 240 nn_color wt: l l l l l l l l l l l w w w w w
+21:37:33 183 [INFO,benchmark_color:90] epoch 240 nn_color bk: w l l l w l l w w l l l l l l w l w l l w l l w l w l l l l l l l w l l l l l l
+21:38:36 310 [INFO,train:230] epoch 240 with 7472 datas
+21:38:36 320 [INFO,train:233] sampled output_value, target_policy:
+0.10 0.03 -0.18 0.25 0.10 0.14 0.09 -0.18 -0.12 0.25 0.24 0.84 -0.41 -0.31 0.53 0.31 -0.39 -0.06 -0.31 0.88 0.08 -0.14 0.41 0.04 -0.65 0.06 0.07 0.19 0.55 0.85 0.01 -0.66
+0.04 0.03 0.04 0.09 0.02 0.02 0.05 0.05 0.03 0.04 0.04 0.08 0.11 0.02 0.07 0.02 0.02 0.04 0.02 0.05 0.03 0.03 0.02 0.05 0.03 0.05 0.05 0.03 0.06 0.02 0.09 0.05
+21:38:36 342 [INFO,train:253] loss_v: 0.6240, grad_conv1: 0.00880889
+21:38:36 342 [INFO,train:254] loss_p: 0.5492, grad_conv1: 0.00327156
+21:38:36 342 [INFO,train:255] lp_std: 0.0243, grad_conv1: 0.00007654
+21:38:36 342 [INFO,train:257] update LOSS_P_WT to 1.34
+21:38:37 973 [INFO,train:278]     age  0: 0.315365
+21:38:39 609 [INFO,train:278]     age  1: 0.182494
+21:38:41 249 [INFO,train:278]     age  2: 0.140491
+21:57:43 091 [INFO,vs_noth:38] epoch 260 avg win steps: 283/40=7.1
+21:57:50 667 [INFO,vs_rand:58] epoch 260 avg win steps: 876/80=10.9, 100.0%
+21:58:15 417 [INFO,benchmark_color:90] epoch 260 nn_color bk: w l l l w l l w w w l w w w w w
+21:58:30 321 [INFO,benchmark_color:90] epoch 260 nn_color wt: l w l w l l l l l l l l w w w w
+21:59:25 385 [INFO,train:230] epoch 260 with 7056 datas
+21:59:25 395 [INFO,train:233] sampled output_value, target_policy:
+0.42 -0.29 -0.22 -0.66 0.51 -0.17 -0.58 0.10 -0.29 -0.32 -0.63 0.57 0.46 0.50 0.29 -0.03 0.20 0.01 0.04 -0.36 -0.12 -0.27 0.22 -0.36 0.16 0.12 -0.02 -0.49 0.32 0.22 0.75 -0.30
+0.02 0.02 0.03 0.02 0.02 0.02 0.03 0.02 0.03 0.03 0.06 0.02 0.03 0.03 0.07 0.03 0.03 0.03 0.04 0.04 0.03 0.03 0.04 0.05 0.03 0.03 0.04 0.08 0.03 0.02 0.02 0.03
+21:59:25 417 [INFO,train:253] loss_v: 0.5158, grad_conv1: 0.01308093
+21:59:25 417 [INFO,train:254] loss_p: 0.3395, grad_conv1: 0.00213296
+21:59:25 417 [INFO,train:255] lp_std: 0.0249, grad_conv1: 0.00006448
+21:59:25 417 [INFO,train:257] update LOSS_P_WT to 2.20
+21:59:26 970 [INFO,train:278]     age  0: 0.318772
+21:59:28 533 [INFO,train:278]     age  1: 0.179391
+21:59:30 088 [INFO,train:278]     age  2: 0.151662
+22:17:34 787 [INFO,vs_noth:38] epoch 280 avg win steps: 274/40=6.8
+22:17:42 406 [INFO,vs_rand:58] epoch 280 avg win steps: 862/80=10.8, 100.0%
+22:18:02 326 [INFO,benchmark_color:90] epoch 280 nn_color bk: w w w l l l w w w w w l w w w w
+22:18:19 512 [INFO,benchmark_color:90] epoch 280 nn_color wt: l w w l l l l l w w l w w w w w
+22:18:58 326 [INFO,benchmark_color:90] epoch 280 nn_color bk: w l l l w l l w w w w w l l l l w l l l w l l w l l l l l l l l w w w l w w l w
+22:19:43 866 [INFO,train:230] epoch 280 with 6160 datas
+22:19:43 875 [INFO,train:233] sampled output_value, target_policy:
+0.73 -0.00 0.80 0.41 0.38 0.31 0.25 -0.23 0.30 0.54 -0.35 0.20 0.34 -0.21 -0.62 0.51 0.18 0.12 0.38 -0.06 0.23 -0.46 0.04 -0.84 -0.35 0.19 0.83 0.05 -0.19 0.57 -0.22 -0.24
+0.03 0.11 0.02 0.04 0.03 0.04 0.04 0.03 0.06 0.05 0.05 0.03 0.04 0.04 0.06 0.03 0.03 0.05 0.04 0.02 0.11 0.02 0.11 0.03 0.06 0.04 0.03 0.04 0.08 0.06 0.03 0.04
+22:19:43 895 [INFO,train:253] loss_v: 0.4501, grad_conv1: 0.00929320
+22:19:43 895 [INFO,train:254] loss_p: 0.3596, grad_conv1: 0.00284321
+22:19:43 895 [INFO,train:255] lp_std: 0.0275, grad_conv1: 0.00009586
+22:19:43 895 [INFO,train:257] update LOSS_P_WT to 1.92
+22:19:45 243 [INFO,train:278]     age  0: 0.257761
+22:19:46 590 [INFO,train:278]     age  1: 0.133623
+22:19:47 938 [INFO,train:278]     age  2: 0.113196
+22:39:07 971 [INFO,vs_noth:38] epoch 300 avg win steps: 305/40=7.6
+22:39:16 091 [INFO,vs_rand:58] epoch 300 avg win steps: 936/80=11.7, 100.0%
+22:39:39 150 [INFO,benchmark_color:90] epoch 300 nn_color bk: w l l w l l w l l w w w w w w w
+22:39:55 287 [INFO,benchmark_color:90] epoch 300 nn_color wt: w l l l w l w w l l w l w w w w
+22:40:45 109 [INFO,train:230] epoch 300 with 6464 datas
+22:40:45 119 [INFO,train:233] sampled output_value, target_policy:
+-0.05 0.03 -0.33 -0.40 0.40 -0.35 0.10 -0.20 -0.54 0.13 -0.09 0.06 0.06 -0.03 -0.18 -0.09 -0.39 -0.49 0.50 -0.22 0.52 -0.30 0.00 0.14 0.27 -0.07 0.09 -0.26 -0.41 0.35 0.04 0.29
+0.03 0.02 0.03 0.04 0.05 0.03 0.05 0.03 0.07 0.02 0.03 0.02 0.03 0.02 0.03 0.03 0.02 0.03 0.03 0.05 0.03 0.04 0.02 0.03 0.11 0.03 0.02 0.02 0.02 0.04 0.05 0.02
+22:40:45 141 [INFO,train:253] loss_v: 0.5977, grad_conv1: 0.00628294
+22:40:45 141 [INFO,train:254] loss_p: 0.2508, grad_conv1: 0.00222399
+22:40:45 141 [INFO,train:255] lp_std: 0.0262, grad_conv1: 0.00009394
+22:40:45 141 [INFO,train:257] update LOSS_P_WT to 1.67
+22:40:46 552 [INFO,train:278]     age  0: 0.247848
+22:40:47 963 [INFO,train:278]     age  1: 0.117683
+22:40:49 379 [INFO,train:278]     age  2: 0.094269
+22:59:42 995 [INFO,vs_noth:38] epoch 320 avg win steps: 266/40=6.7
+22:59:50 162 [INFO,vs_rand:58] epoch 320 avg win steps: 856/80=10.7, 100.0%
+23:00:19 165 [INFO,benchmark_color:90] epoch 320 nn_color bk: w l w l w w w l l l w w w w w l
+23:00:38 296 [INFO,benchmark_color:90] epoch 320 nn_color wt: l w l l l l l l l l l l w w w w
+23:01:43 898 [INFO,train:230] epoch 320 with 7168 datas
+23:01:43 908 [INFO,train:233] sampled output_value, target_policy:
+0.03 -0.00 0.23 -0.06 -0.07 0.22 -0.65 -0.12 -0.66 0.03 0.39 -0.20 0.17 -0.06 0.02 0.33 0.36 0.67 0.06 0.16 -0.68 -0.05 0.76 0.15 0.27 -0.00 0.29 -0.00 -0.29 -0.10 0.79 0.10
+0.03 0.05 0.03 0.03 0.05 0.02 0.02 0.02 0.03 0.10 0.03 0.01 0.03 0.06 0.03 0.03 0.03 0.06 0.03 0.03 0.02 0.02 0.02 0.03 0.03 0.04 0.03 0.03 0.03 0.02 0.02 0.04
+23:01:43 930 [INFO,train:253] loss_v: 0.5110, grad_conv1: 0.00493864
+23:01:43 930 [INFO,train:254] loss_p: 0.2636, grad_conv1: 0.00330947
+23:01:43 930 [INFO,train:255] lp_std: 0.0244, grad_conv1: 0.00011570
+23:01:43 930 [INFO,train:257] update LOSS_P_WT to 1.21
+23:01:45 494 [INFO,train:278]     age  0: 0.207126
+23:01:47 069 [INFO,train:278]     age  1: 0.107123
+23:01:48 644 [INFO,train:278]     age  2: 0.090693
+23:20:08 088 [INFO,vs_noth:38] epoch 340 avg win steps: 277/40=6.9
+23:20:15 732 [INFO,vs_rand:58] epoch 340 avg win steps: 894/80=11.2, 100.0%
+23:20:34 980 [INFO,benchmark_color:90] epoch 340 nn_color bk: l w w w w l w w w l l w w w w w
+23:20:54 488 [INFO,benchmark_color:90] epoch 340 nn_color wt: w w w l w w l l w w w w w w l w
+23:21:27 051 [INFO,benchmark_color:90] epoch 340 nn_color wt: w w w w w w w w l l w l l l l l l l w l w w w w l w l w w l w w l l w l l l l l
+23:22:22 596 [INFO,train:230] epoch 340 with 6848 datas
+23:22:22 606 [INFO,train:233] sampled output_value, target_policy:
+-0.03 0.67 -0.16 -0.09 -0.13 0.07 -0.55 0.10 -0.05 0.42 0.75 -0.90 -0.02 -0.30 -0.25 -0.48 0.19 0.60 0.08 -0.73 -0.81 -0.04 0.59 -0.09 0.26 0.44 0.28 0.78 0.38 -0.07 0.06 -0.17
+0.09 0.02 0.05 0.03 0.02 0.06 0.03 0.03 0.03 0.04 0.02 0.02 0.05 0.04 0.03 0.03 0.03 0.03 0.03 0.04 0.02 0.04 0.02 0.07 0.03 0.04 0.02 0.01 0.05 0.04 0.08 0.03
+23:22:22 628 [INFO,train:253] loss_v: 0.5913, grad_conv1: 0.00598488
+23:22:22 628 [INFO,train:254] loss_p: 0.4774, grad_conv1: 0.00293482
+23:22:22 628 [INFO,train:255] lp_std: 0.0239, grad_conv1: 0.00007172
+23:22:22 629 [INFO,train:257] update LOSS_P_WT to 1.11
+23:22:24 133 [INFO,train:278]     age  0: 0.248138
+23:22:25 634 [INFO,train:278]     age  1: 0.132511
+23:22:27 139 [INFO,train:278]     age  2: 0.113794
+23:42:16 548 [INFO,vs_noth:38] epoch 360 avg win steps: 266/40=6.7
+23:42:23 987 [INFO,vs_rand:58] epoch 360 avg win steps: 866/80=10.8, 100.0%
+23:42:41 302 [INFO,benchmark_color:90] epoch 360 nn_color bk: l w l w w w w l w w l w w w w w
+23:42:57 488 [INFO,benchmark_color:90] epoch 360 nn_color wt: l l l w l l l l w w w w w w w w
+23:44:01 843 [INFO,train:230] epoch 360 with 7536 datas
+23:44:01 854 [INFO,train:233] sampled output_value, target_policy:
+0.38 -0.71 -0.10 -0.26 -0.28 0.60 -0.12 0.15 0.15 -0.04 -0.10 0.01 -0.53 -0.58 -0.04 0.54 -0.06 -0.04 0.14 -0.23 -0.47 -0.09 -0.48 0.53 -0.34 -0.28 -0.06 -0.33 -0.19 0.46 0.88 0.15
+0.04 0.02 0.04 0.03 0.03 0.03 0.03 0.02 0.03 0.03 0.04 0.03 0.04 0.05 0.02 0.02 0.03 0.02 0.03 0.03 0.06 0.03 0.02 0.02 0.03 0.04 0.03 0.03 0.03 0.01 0.01 0.02
+23:44:01 876 [INFO,train:253] loss_v: 0.3917, grad_conv1: 0.00662019
+23:44:01 876 [INFO,train:254] loss_p: 0.2952, grad_conv1: 0.00171339
+23:44:01 876 [INFO,train:255] lp_std: 0.0232, grad_conv1: 0.00004108
+23:44:01 876 [INFO,train:257] update LOSS_P_WT to 1.52
+23:44:03 515 [INFO,train:278]     age  0: 0.179044
+23:44:05 158 [INFO,train:278]     age  1: 0.094747
+23:44:06 801 [INFO,train:278]     age  2: 0.077989
+00:03:33 908 [INFO,vs_noth:38] epoch 380 avg win steps: 271/40=6.8
+00:03:41 801 [INFO,vs_rand:58] epoch 380 avg win steps: 880/80=11.0, 100.0%
+00:04:04 077 [INFO,benchmark_color:90] epoch 380 nn_color bk: l w w w l l w l w w l l w w w w
+00:04:23 593 [INFO,benchmark_color:90] epoch 380 nn_color wt: l w l w w l w l l l l w w l w w
+00:05:15 071 [INFO,train:230] epoch 380 with 6352 datas
+00:05:15 080 [INFO,train:233] sampled output_value, target_policy:
+-0.32 0.14 -0.69 0.57 -0.58 -0.71 -0.62 -0.43 0.22 0.57 0.47 0.07 0.07 -0.29 0.69 1.00 -0.52 -0.55 -0.74 0.11 0.06 -0.01 -0.10 0.34 -0.23 0.21 -0.11 -0.08 0.43 0.38 -0.31 0.45
+0.04 0.03 0.03 0.02 0.08 0.02 0.05 0.02 0.03 0.04 0.03 0.03 0.03 0.03 0.05 0.02 0.02 0.02 0.01 0.03 0.03 0.04 0.02 0.03 0.03 0.04 0.06 0.03 0.04 0.03 0.03 0.02
+00:05:15 102 [INFO,train:253] loss_v: 0.6661, grad_conv1: 0.00598061
+00:05:15 102 [INFO,train:254] loss_p: 0.3343, grad_conv1: 0.00221006
+00:05:15 102 [INFO,train:255] lp_std: 0.0247, grad_conv1: 0.00005485
+00:05:15 103 [INFO,train:257] update LOSS_P_WT to 1.44
+00:05:16 490 [INFO,train:278]     age  0: 0.199437
+00:05:17 886 [INFO,train:278]     age  1: 0.103401
+00:05:19 277 [INFO,train:278]     age  2: 0.090118
+00:24:37 508 [INFO,vs_noth:38] epoch 400 avg win steps: 262/40=6.5
+00:24:44 707 [INFO,vs_rand:58] epoch 400 avg win steps: 850/80=10.6, 100.0%
+00:25:10 803 [INFO,benchmark_color:90] epoch 400 nn_color bk: w l l l w l w w w l w l w w w w
+00:25:31 742 [INFO,benchmark_color:90] epoch 400 nn_color wt: l l w l l l l l l l w l w w w w
+00:26:30 431 [INFO,train:230] epoch 400 with 7440 datas
+00:26:30 442 [INFO,train:233] sampled output_value, target_policy:
+0.13 0.18 0.50 0.15 0.16 0.30 -0.39 0.06 -0.03 -0.03 -0.42 -0.17 -0.21 -0.37 -0.05 -0.38 0.14 0.61 0.01 -0.09 -0.30 0.22 0.60 -0.53 0.40 -0.35 -0.04 -0.11 0.69 0.27 -0.52 -0.05
+0.02 0.04 0.07 0.03 0.02 0.02 0.03 0.04 0.05 0.02 0.02 0.02 0.04 0.03 0.02 0.02 0.04 0.10 0.04 0.03 0.03 0.03 0.04 0.07 0.02 0.07 0.03 0.02 0.02 0.02 0.03 0.02
+00:26:30 464 [INFO,train:253] loss_v: 0.4909, grad_conv1: 0.00349484
+00:26:30 464 [INFO,train:254] loss_p: 0.2876, grad_conv1: 0.00178820
+00:26:30 464 [INFO,train:255] lp_std: 0.0228, grad_conv1: 0.00004256
+00:26:30 464 [INFO,train:257] update LOSS_P_WT to 1.21
+00:26:32 084 [INFO,train:278]     age  0: 0.180249
+00:26:33 708 [INFO,train:278]     age  1: 0.093692
+00:26:35 337 [INFO,train:278]     age  2: 0.074637
+00:45:20 189 [INFO,vs_noth:38] epoch 420 avg win steps: 262/40=6.5
+00:45:27 209 [INFO,vs_rand:58] epoch 420 avg win steps: 838/80=10.5, 100.0%
+00:45:47 649 [INFO,benchmark_color:90] epoch 420 nn_color bk: w l l w l l w w l l l w w l w w
+00:46:07 357 [INFO,benchmark_color:90] epoch 420 nn_color wt: l l w l l l l w w l l l w w w w
+00:47:07 097 [INFO,train:230] epoch 420 with 7360 datas
+00:47:07 106 [INFO,train:233] sampled output_value, target_policy:
+0.20 0.51 -0.09 -0.24 0.44 0.44 0.30 -0.12 0.16 -0.48 0.72 0.52 0.57 0.16 -0.44 0.01 -0.17 -0.01 -0.64 0.38 0.23 0.17 0.15 -0.17 0.04 0.59 -0.08 0.14 0.07 0.20 0.26 -0.64
+0.02 0.03 0.02 0.02 0.03 0.04 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.03 0.02 0.03 0.02 0.02 0.04 0.02 0.08 0.03 0.03 0.04 0.03 0.02 0.02 0.02 0.03 0.02 0.03 0.02
+00:47:07 128 [INFO,train:253] loss_v: 0.5830, grad_conv1: 0.00597746
+00:47:07 128 [INFO,train:254] loss_p: 0.2649, grad_conv1: 0.00143905
+00:47:07 128 [INFO,train:255] lp_std: 0.0226, grad_conv1: 0.00004853
+00:47:07 128 [INFO,train:257] update LOSS_P_WT to 1.64
+00:47:08 734 [INFO,train:278]     age  0: 0.203643
+00:47:10 344 [INFO,train:278]     age  1: 0.095330
+00:47:11 959 [INFO,train:278]     age  2: 0.081690
+01:02:48 092 [ERR,gen_data_sub:174] :
+Traceback (most recent call last):
+  File "/home/ren9k/FiveStone-Gongzhu/fivestone_zero.py", line 172, in gen_data_sub
+    datalist=gen_data(model,num_games,randseed,data_q,PARA_DICT)
+  File "/home/ren9k/FiveStone-Gongzhu/fivestone_zero.py", line 106, in gen_data
+    searcher.search(initialState=state)
+  File "/home/ren9k/FiveStone-Gongzhu/MCTS/mcts.py", line 141, in search
+    val,ks = self.alphabeta(initialState.takeAction(action), self.deep-1, -1*self.gameinf, self.gameinf, killers = killers)
+  File "/home/ren9k/FiveStone-Gongzhu/MCTS/mcts.py", line 163, in alphabeta
+    return self.rollout(node),[]
+  File "/home/ren9k/FiveStone-Gongzhu/MCTS/mcts.py", line 123, in trivialPolicy
+    return state.getReward()
+KeyboardInterrupt
+
+01:02:48 092 [ERR,gen_data_sub:174] :
+Traceback (most recent call last):
+  File "/home/ren9k/FiveStone-Gongzhu/fivestone_zero.py", line 172, in gen_data_sub
+    datalist=gen_data(model,num_games,randseed,data_q,PARA_DICT)
+  File "/home/ren9k/FiveStone-Gongzhu/fivestone_zero.py", line 106, in gen_data
+    searcher.search(initialState=state)
+  File "/home/ren9k/FiveStone-Gongzhu/MCTS/mcts.py", line 141, in search
+    val,ks = self.alphabeta(initialState.takeAction(action), self.deep-1, -1*self.gameinf, self.gameinf, killers = killers)
+  File "/home/ren9k/FiveStone-Gongzhu/fivestone_conv.py", line 113, in takeAction
+    newState = deepcopy(self)
+  File "/usr/lib/python3.8/copy.py", line 172, in deepcopy
+    y = _reconstruct(x, memo, *rv)
+KeyboardInterrupt
+
+01:02:48 092 [ERR,gen_data_sub:174] :
+Traceback (most recent call last):
+  File "/home/ren9k/FiveStone-Gongzhu/fivestone_zero.py", line 172, in gen_data_sub
+    datalist=gen_data(model,num_games,randseed,data_q,PARA_DICT)
+  File "/home/ren9k/FiveStone-Gongzhu/fivestone_zero.py", line 106, in gen_data
+    searcher.search(initialState=state)
+  File "/home/ren9k/FiveStone-Gongzhu/MCTS/mcts.py", line 141, in search
+    val,ks = self.alphabeta(initialState.takeAction(action), self.deep-1, -1*self.gameinf, self.gameinf, killers = killers)
+  File "/home/ren9k/FiveStone-Gongzhu/fivestone_conv.py", line 113, in takeAction
+    newState = deepcopy(self)
+  File "/usr/lib/python3.8/copy.py", line 172, in deepcopy
+    y = _reconstruct(x, memo, *rv)
+KeyboardInterrupt
+
