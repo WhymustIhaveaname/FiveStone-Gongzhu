@@ -15,16 +15,25 @@ git checkout alphabeta
 cd ..
 ```
 
-Using the following command to play with alpha-beta pruning AI.
+* Use the following command to play with alpha-beta pruning AI.
 ```
 ./fivestone_conv.py
 ```
 Input like `-1,1` to put a stone. To change your color or set search deep, please modify the codes.
 
-Using the following command to play with neural network AI.
+* Use the following command to play with neural network AI.
 ```
 ./fivestone_zero.py
 ```
+
+* The following screenshot is a typical game against fivestone_zero.
+I am ○ while AI ●.
+He decided to play `(4, 7)` (this is matrix index) after 886 searches.
+Then the board is printed. Then I input my next step, `2,-1` (in XY coordinates).
+Clever friends may find that I have lost at this step (AI will get to a 3-3 after two rounds).
+And my AI indeed did that!
+
+![A typical game against fivestone_zero.](https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/typical_game.png?raw=true)
 
 ### File Description
 
