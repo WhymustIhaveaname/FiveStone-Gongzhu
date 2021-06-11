@@ -51,10 +51,18 @@ Using the following command to play with neural network AI.
 
 ### Parameter in `fivestone_zero` Explained
 
-There is a `PARA_DICT` in `fivestone_zero.py`. Its keys have the following meanings.
+There is a `PARA_DICT` in `fivestone_zero.py`. By diving into these parameteres, one can get a better understanding of our programme. Its keys have the following meanings.
 
-*
-*
+* `ACTION_NUM` and `POSSACT_RAD`: control the behaviour of `FiveStone_ZERO.getPossibleActions()`.
+* `AB_DEEP`: search deep of alpha-beta tree. Restricted by our computational power (a single 3070), this value is always 1.
+* `SOFTK`: the factor multiplied to values before the softmax generating target policy distribution.
+* `LOSS_P_WT`, `LOSS_P_WT_RATIO`: controls the weight of policy loss w.r.t value loss.
+* `STDP_WT`: weight of policy standard error for generating a more decisive (larger standard error) policy.
+* `FINAL_LEN` and `FINAL_BIAS`: the last `FINAL_LEN` steps of a game will be thought as "final". Their values will be modified based on the final result. `FINAL_BIAS` controls the portion of mixing.
+* `SHIFT_MAX=3`: the train boards are shifted by a randint between -3 and 3.
+* `UID_ROT=4`: each board will be rotated 4 times to generate 4 different train datas.
+
+Among these parameters, `SHIFT_MAX` is the key point. AI will not improve without it. The importance of `FINAL_LEN` and `FINAL_BIAS` are to be studied.
 
 ### Abelation Experiments
 
