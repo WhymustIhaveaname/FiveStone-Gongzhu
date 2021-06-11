@@ -275,7 +275,6 @@ def test_push_data():
 
     push_data([],mat_in,best_value,target_p,legal_mask,rots=[0,1])
 
-
 def test_vs_noth(model):
     """passed"""
     state=FiveStone_ZERO(model.eval().half())
@@ -288,7 +287,7 @@ if __name__=="__main__":
     start_file=None
     #start_file="./logs/6_1/PV_resnet-16-15857234-180.pkl"
     #start_file="./logs/8/PV_resnet-16-15857234-40.pkl"
-    start_file="./logs/17/PV_resnet-16-15859346-380.pkl"
+    start_file="./logs/17/PV_resnet-16-15859346-520.pkl"
     if start_file!=None:
         model.load_state_dict(torch.load(start_file,map_location="cuda"))
         log("load from %s"%(start_file))
