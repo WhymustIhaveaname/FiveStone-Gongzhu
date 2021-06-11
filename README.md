@@ -1,8 +1,16 @@
 # FiveStone-Gongzhu
 
-We solved Gomoku (Five in a Row) using both alpha-beta pruning and AlphaZero's architecture. For simplicity, this Gomoku uses a 9x9 board and applies no professional rules ([Renju's 33, 44 and overlines rules applied to black](https://en.wikipedia.org/wiki/Gomoku#Specific_variations)). We show that a 16 layer convolutional network can reach a higher level than man-made evaluation only by self-learning. We investigate some statistical properties of our AIs. This project takes advantage of [Gongzhu-Society](https://github.com/Gongzhu-Society/MCTS)'s MCTS and alpha-beta pruning package.
+We solved Gomoku (Five in a Row) using both alpha-beta pruning and AlphaZero's architecture.
+For simplicity, this Gomoku uses a 9x9 board and applies no professional rules ([Renju's 33, 44 and overlines rules applied to black](https://en.wikipedia.org/wiki/Gomoku#Specific_variations)).
+We show that a 16 layer convolutional network can reach a higher level than man-made evaluation only by self-learning.
+We investigate some statistical properties of our AIs.
+This project takes advantage of [Gongzhu-Society](https://github.com/Gongzhu-Society/MCTS)'s MCTS and alpha-beta pruning package.
 
-我们用两种方法 —— alpha-beta 剪枝和类 AlphaZero 方法解决了五子棋的问题。出于演示的目的，我们使用了 9x9 的棋盘并且没有采用任何禁手规则。一个 16 层的卷积神经网络通过自学就能达到比 alpha-beta 剪枝中人为指定的 evaluation 更高的水平。我们对我们 AI 的行为进行了一些统计。本项目使用了 [Gongzhu-Society](https://github.com/Gongzhu-Society/MCTS) 的蒙特卡洛树搜索和 alpha-beta 剪枝包。
+我们用两种方法 —— alpha-beta 剪枝和类 AlphaZero 方法解决了五子棋的问题。
+出于演示的目的，我们使用了 9x9 的棋盘并且没有采用任何禁手规则。
+一个 16 层的卷积神经网络通过自学就能达到比 alpha-beta 剪枝中人为指定的 evaluation 更高的水平。
+我们对我们 AI 的行为进行了一些统计。
+本项目使用了 [Gongzhu-Society](https://github.com/Gongzhu-Society/MCTS) 的蒙特卡洛树搜索和 alpha-beta 剪枝包。
 
 ### Environment Setup and Get Started
 
@@ -19,7 +27,8 @@ cd ..
 ```
 ./fivestone_conv.py
 ```
-Input like `-1,1` to put a stone. To change your color or set search deep, please modify the codes.
+Input like `-1,1` to put a stone.
+To change your color or set search deep, please modify the codes.
 
 * Use the following command to play with neural network AI.
 ```
