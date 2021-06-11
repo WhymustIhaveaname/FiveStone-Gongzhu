@@ -28,7 +28,7 @@ Using the following command to play with neural network AI.
 
 ### File Description
 
-* fivestone_conv.py: five-stone using "classical" alpha-beta pruning. It contains
+* fivestone_conv.py: Gomoku using "classical" alpha-beta pruning. It contains
     * `def log(msg,l=1,end="\n",logfile=None,fileonly=False):` a utility function for logging.
     * `class FiveStoneState():` the class representing a board with stones to be used in search algorithm (MCTS or alpha-beta pruning). Its evaluation function takes advantage of PyTorch's convolution function. Thus comes its name "conv".
     * `def pretty_board(gamestate):` a utility function for printing pretty board to terminal.
@@ -56,8 +56,15 @@ There is a `PARA_DICT` in `fivestone_zero.py`. Its keys have the following meani
 *
 *
 
-### Abelation Experiment
+### Abelation Experiments
 
-### Statistica and Behaviour Analyse
+### Statistics and Behaviour Analyse
 
 ### Todo List
+
+- [ ] Ablation experiment of `FINAL_LEN` and `FINAL_BIAS`.
+- [ ] Ablation experiment of `SHIFT_MAX`.
+- [ ] Ablation experiment of `ACTION_NUM` and `POSSACT_RAD`.
+- [ ] Opening statistics.
+- [ ] Behaviour statistics.
+- [ ] Puzzles solving. (尤其是双杀)

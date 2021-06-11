@@ -288,14 +288,14 @@ if __name__=="__main__":
     start_file=None
     #start_file="./logs/6_1/PV_resnet-16-15857234-180.pkl"
     #start_file="./logs/8/PV_resnet-16-15857234-40.pkl"
-    #start_file="./logs/16/PV_resnet-16-15859346-420.pkl"
+    start_file="./logs/17/PV_resnet-16-15859346-380.pkl"
     if start_file!=None:
         model.load_state_dict(torch.load(start_file,map_location="cuda"))
         log("load from %s"%(start_file))
     else:
         log("init model %s"%(model))
     #test_must_win(model)
-    #play_tui(model)
+    play_tui(model)
     #test_push_data()
     #test_vs_noth(model)
-    train(model)
+    #train(model)
