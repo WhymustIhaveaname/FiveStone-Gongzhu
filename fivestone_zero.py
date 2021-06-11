@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from torch.multiprocessing import Process,Queue
 
 from MCTS.mcts import abpruning
-from fivestone_conv import log, pretty_board
+from fivestone_conv import log,pretty_board,get_tui_input
 
 torch.set_default_dtype(torch.float16)
 from net_topo import PV_resnet, FiveStone_CNN
@@ -246,22 +246,6 @@ def test_must_win(model):
     log("\n%s"%("\n".join(s)))
     log(value)
     pretty_board(state.takeAction(state.policy_choice_best()))
-
-def get_tui_input(state):
-    pretty_board(state)
-    while True:
-        istr=input("your action: ")
-        r=re.match("[\\-0-9]+([,.])[\\-0-9]+",istr)
-        if r:
-            myaction=tuple([int(i) for i in istr.split(r.group(1))])
-            try:
-                state=state.track_hist([myaction])
-            except:
-                log("take action failed",l=3)
-            else:
-                return state
-        else:
-            log("input format error!")
 
 def play_tui(model,human_color=-1):
     searcher=abpruning(deep=3,n_killer=2,gameinf=1024)

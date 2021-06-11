@@ -1,8 +1,10 @@
 # FiveStone-Gongzhu
 
-Solving Fivestone using AlphaZero's architecture and [Gongzhu-Society](https://github.com/Gongzhu-Society/MCTS)'s package.
+We solved Gomoku (Five in a Row) using both alpha-beta pruning and AlphaZero's architecture. For simplicity, this Gomoku uses a 9x9 board and applies no professional rules ([Renju's 33, 44 and overlines rules applied to black](https://en.wikipedia.org/wiki/Gomoku#Specific_variations)). We show that a 16 layer convolutional network can reach a higher level than man-made evaluation only by self-learning. We investigate some statistical properties of our AIs. This project takes advantage of [Gongzhu-Society](https://github.com/Gongzhu-Society/MCTS)'s MCTS and alpha-beta pruning package.
 
-### Enviroment Setup
+我们用两种方法 —— alpha-beta 剪枝和类 AlphaZero 方法解决了五子棋的问题。出于演示的目的，我们使用了 9x9 的棋盘并且没有采用任何禁手规则。一个 16 层的卷积神经网络通过自学就能达到比 alpha-beta 剪枝中人为指定的 evaluation 更高的水平。我们对我们 AI 的行为进行了一些统计。本项目使用了 [Gongzhu-Society](https://github.com/Gongzhu-Society/MCTS) 的蒙特卡洛树搜索和 alpha-beta 剪枝包。
+
+### Environment Setup and Get Started
 
 ```
 git clone https://github.com/Victerose/FiveStone-Gongzhu.git
@@ -13,9 +15,49 @@ git checkout alphabeta
 cd ..
 ```
 
+Using the following command to play with alpha-beta pruning AI.
+```
+./fivestone_conv.py
+```
+Input like `-1,1` to put a stone. To change your color or set search deep, please modify the codes.
+
+Using the following command to play with neural network AI.
+```
+./fivestone_zero.py
+```
+
 ### File Description
 
-* fivestone_conv.py: fivestone using "classical" alpha-beta pruning. Its evaluation function takes advantage of PyTorch's convolution function. Thus comes its name "conv".
-* net_topo.py: net topology and other utility functions including benchmark, etc.
-* fivestone_cnn.py: supervised learning neural network AI.
-* fivestone_zero.py: self-learning AI.
+* fivestone_conv.py: five-stone using "classical" alpha-beta pruning. It contains
+    * `def log(msg,l=1,end="\n",logfile=None,fileonly=False):` a utility function for logging.
+    * `class FiveStoneState():` the class representing a board with stones to be used in search algorithm (MCTS or alpha-beta pruning). Its evaluation function takes advantage of PyTorch's convolution function. Thus comes its name "conv".
+    * `def pretty_board(gamestate):` a utility function for printing pretty board to terminal.
+    * `def play_tui(human_color=-1,deep=3):` interface between human and AI.
+
+* net_topo.py: net topology and a new GameState class adapted neural network. It contains
+    * `class PVnet_cnn(nn.Module):` an obsolete policy-value network.
+    * `class PV_resnet(PVnet_cnn):` the policy-value network in use. It is a 16 layer resnet.
+    * `class FiveStone_CNN(FiveStoneState):` the gamestate adapted neural network.
+
+* benchmark_utils.py: benchmark utilities.
+    * `def vs_noth(state_nn,epoch):` v.s. nothing. Examine how many steps an AI can get five in a row without an opponent.
+    * `def benchmark(state_nn,epoch):` benchmark raw network (one network eval using policy output) against classical alpha-beta pruning with man craft evaluation function under deep 1 search.
+
+* fivestone_zero.py: AlphaZero architecture AI. It contains
+    * `class FiveStone_ZERO(FiveStone_CNN):` a gamestate with minor changes made based on `FiveStone_CNN`.
+    * `def gen_data(model,num_games,randseed,data_q,PARA_DICT):` generate train data by self playing.
+    * `def gen_data_sub(model,num_games,randseed,data_q,PARA_DICT):` and `def gen_data_multithread(model,num_games):` multiprocessing version of `gen_data`.
+    * `def train(model):` train the model.
+
+### Parameter in `fivestone_zero` Explained
+
+There is a `PARA_DICT` in `fivestone_zero.py`. Its keys have the following meanings.
+
+*
+*
+
+### Abelation Experiment
+
+### Statistica and Behaviour Analyse
+
+### Todo List

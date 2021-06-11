@@ -227,38 +227,43 @@ def pretty_board(gamestate):
     li=[]
     for i,r in enumerate(gamestate.board):
         lj="|".join([d_stone[j.item()] for j in r])
-        li.append("%2d|%s|"%(i,lj))
+        li.append("%2d|%s|"%(4-i,lj))
+    li.append("           0 1 2 3 4 ")
     li="\n".join(li)
     log("\n%s"%(li),l=0)
     return li
 
-def play_tui():
-    state = FiveStoneState()
-    searcher=abpruning(deep=3,n_killer=4)
+def play_tui(human_color=-1,deep=3):
+    searcher=abpruning(deep=deep,n_killer=4)
+    state=FiveStoneState()
+    state.reset()
     while not state.isTerminal():
-        searcher.counter=0
-        log("searching...")
-        searcher.search(initialState=state)
-        log("searched %d cases"%(searcher.counter))
-        #print(searcher.children)
-        best_action=max(searcher.children.items(),key=lambda x: x[1]*state.currentPlayer)
-        log(best_action)
-        state=state.takeAction(best_action[0])
-        #print(state.board.type(torch.int8))
-        pretty_board(state)
-        while True:
-            istr=input("your action: ")
-            r=re.match("[\\-0-9]+([,.])[\\-0-9]+",istr)
-            if r:
-                myaction=tuple([int(i) for i in istr.split(r.group(1))])
-                try:
-                    state=state.track_hist([myaction])
-                except:
-                    log("take action failed",l=3)
-                else:
-                    break
+        if state.currentPlayer==human_color:
+            get_tui_input(state)
+        else:
+            searcher.counter=0
+            log("searching...")
+            searcher.search(initialState=state)
+            log("searched %d cases"%(searcher.counter))
+            best_action=max(searcher.children.items(),key=lambda x: x[1]*state.currentPlayer)
+            log(best_action)
+            state=state.takeAction(best_action[0])
+
+def get_tui_input(state):
+    pretty_board(state)
+    while True:
+        istr=input("your action: ")
+        r=re.match("[\\-0-9]+([,.])[\\-0-9]+",istr)
+        if r:
+            myaction=tuple([int(i) for i in istr.split(r.group(1))])
+            try:
+                state=state.track_hist([myaction])
+            except:
+                log("take action failed",l=3)
             else:
-                log("input format error!")
+                return state
+        else:
+            log("input format error!")
 
 def test_rot():
     state = FiveStoneState()
@@ -268,5 +273,5 @@ def test_rot():
         pretty_board(state)
 
 if __name__=="__main__":
-    test_rot()
-    #play_tui()
+    #test_rot()
+    play_tui(human_color=-1,deep=3)
