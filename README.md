@@ -42,7 +42,9 @@ Then the board is printed. Then I input my next step, `2,-1` (in XY coordinates)
 Clever friends may find that I have lost at this step (AI will get to a 3-3 after two rounds).
 And my AI indeed did that!
 
-![A typical game against fivestone_zero.](https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/typical_game.png?raw=true)
+<div align=center>
+   <img width="70%" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/typical_game.png?raw=true"/>
+</div>
 
 ### File Description
 
@@ -85,6 +87,17 @@ Its keys have the following meanings.
 Among these parameters, __SHIFT_MAX__ is the most important one.
 AI will not improve when SHIFT_MAX is set to 0.
 The importance of __FINAL_LEN__ and __FINAL_BIAS__ are to be studied.
+
+### Train It!
+
+The following figure is for the 17th try.
+Its main parameters are `{"ACTION_NUM": 100, "POSSACT_RAD": 1, "FINAL_LEN": 4, "FINAL_BIAS": 0.5, "UID_ROT": 4, "SHIFT_MAX":3}`.
+Its raw network win rate against man-craft AI stables at half-half after 200 epochs (each epoch contains 30 games).
+The most impressive point is, the steps taken for five in a line without opponent drop to around 5 (of course, 5 is the minimal possible value) after only 5 epochs!
+
+<div align=center>
+   <img width="50%" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/try17.png?raw=true"/>
+</div>
 
 ### Abelation Experiments
 
