@@ -15,12 +15,9 @@ This project takes advantage of [Gongzhu-Society](https://github.com/Gongzhu-Soc
 ## Environment Setup and Get Started
 
 ```
-git clone https://github.com/Victerose/FiveStone-Gongzhu.git
+git clone https://github.com/WhymustIhaveaname/FiveStone-Gongzhu.git
 cd FiveStone-Gongzhu
 git clone https://github.com/Gongzhu-Society/MCTS.git
-cd MCTS
-git checkout alphabeta
-cd ..
 ```
 
 * Use the following command to play with alpha-beta pruning AI.
@@ -90,7 +87,7 @@ The importance of __FINAL_LEN__ and __FINAL_BIAS__ are to be studied.
 
 ## Training and Abelation Experiments
 
-The following figure is for the 17th try.
+* The following figure is for the 17th try.
 Its main parameters are `{"ACTION_NUM": 100, "POSSACT_RAD": 1, "FINAL_LEN": 4, "FINAL_BIAS": 0.5, "UID_ROT": 4, "SHIFT_MAX":3}`.
 The blue dashed line is the steps taken to make five in a line without an opponent, corresponding to the left vertical axis.
 The solid line with round data points is the win rate in percent of the raw network against man-craft AI with search deep 1, corresponding to the right vertical axis.
