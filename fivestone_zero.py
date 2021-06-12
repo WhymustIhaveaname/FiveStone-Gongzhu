@@ -15,7 +15,7 @@ from benchmark_utils import open_bl,benchmark,vs_noth
 
 PARA_DICT={ "ACTION_NUM":100, "POSSACT_RAD":1, "AB_DEEP":1, "SOFTK":4,
             "LOSS_P_WT":1.0, "LOSS_P_WT_RATIO": 0.5, "STDP_WT": 5.0, "BATCH_SIZE":64,
-            "FINAL_LEN": 4, "FINAL_BIAS": 0.5, "UID_ROT": 4, "SHIFT_MAX":3}
+            "FINAL_LEN": 4, "FINAL_BIAS": 0.5, "UID_ROT": 4, "SHIFT_MAX":2}
 
 class FiveStone_ZERO(FiveStone_CNN):
     def reset(self):
@@ -75,7 +75,7 @@ def balance_bkwt(datalist):
         this_data=[in_mat_s,-1*best_val,target_p,legal_msk]
         datalist.append(this_data)
 
-def gen_data(model,num_games,randseed,data_q,PARA_DICT):
+def gen_data(model,num_games,randseed,PARA_DICT):
     train_datas=[]
     searcher=abpruning(deep=PARA_DICT["AB_DEEP"])
     state = FiveStone_ZERO(model)
@@ -127,7 +127,7 @@ def gen_data(model,num_games,randseed,data_q,PARA_DICT):
 
 def gen_data_sub(model,num_games,randseed,data_q,PARA_DICT):
     try:
-        datalist=gen_data(model,num_games,randseed,data_q,PARA_DICT)
+        datalist=gen_data(model,num_games,randseed,PARA_DICT)
     except:
         log("",l=3)
         datalist=[]
@@ -137,11 +137,11 @@ def gen_data_sub(model,num_games,randseed,data_q,PARA_DICT):
     #data_q.put((fd,fname,tuple(lre)))
     data_q.put((fd,fname))
 
-def gen_data_multithread(model,num_games):
+def gen_data_multithread(model,num_games,num_thread):
     data_q=Queue()
     plist=[]
     t=int(time.time())
-    for i in range(3):
+    for i in range(num_thread):
         plist.append(Process(target=gen_data_sub,args=(copy.deepcopy(model).eval().half(),num_games,i+t,data_q,PARA_DICT)))
         plist[-1].start()
     rlist=[]
@@ -159,7 +159,7 @@ def train(model):
     log("optim: %s"%(optim.__dict__['defaults'],))
     log("PARA_DICT: %s"%(PARA_DICT))
 
-    for epoch in range(1200):
+    for epoch in range(600):
         if epoch<3 or (epoch<40 and epoch%5==0) or epoch%10==0:
             print_flag=True
         else:
@@ -172,12 +172,12 @@ def train(model):
         if print_flag and epoch%5==0:
             state_nn=FiveStone_ZERO(copy.deepcopy(model).eval().half())
             state_nn.target_num=100
-            state_nn.radius=2
+            state_nn.radius=2 # do not touch benchmark parameters!
             vs_noth(state_nn,epoch)
             benchmark(state_nn,epoch)
 
-        #train_datas = gen_data(copy.deepcopy(model).eval().half(),5,time.time(),None,PARA_DICT)
-        train_datas = gen_data_multithread(model,10)
+        train_datas = gen_data(copy.deepcopy(model).eval().half(),30,time.time(),PARA_DICT)
+        #train_datas = gen_data_multithread(model,10,3)
         balance_bkwt(train_datas)
         trainloader = torch.utils.data.DataLoader(train_datas,batch_size=PARA_DICT["BATCH_SIZE"],shuffle=True,drop_last=True)
 
@@ -188,7 +188,6 @@ def train(model):
                 log("sampled output_value, output_policy:\n%s\n%s"%(" ".join(["%.2f"%(i[0]) for i in value][0:32]),
                                                                     " ".join(["%.2f"%(i) for i in (policy*batch[3]).std(dim=1)][0:32]) ))
 
-                #log_p = F.log_softmax(policy*batch[3],dim=1)
                 softmax_p = (policy*batch[3]).softmax(dim=1)
                 loss_p = F.kl_div(softmax_p.log(),batch[2],reduction="batchmean")
                 optim.zero_grad()
@@ -248,9 +247,9 @@ def test_must_win(model):
     pretty_board(state.takeAction(state.policy_choice_best()))
 
 def play_tui(model,human_color=-1):
-    searcher=abpruning(deep=3,n_killer=2,gameinf=1024)
+    searcher=abpruning(deep=5,n_killer=2,gameinf=1024)
     state = FiveStone_ZERO(model.eval().half())
-    state.target_num=20
+    state.target_num=5
     state.radius=2
     state.reset()
     while not state.isTerminal():
@@ -283,18 +282,19 @@ def test_vs_noth(model):
 if __name__=="__main__":
     torch.multiprocessing.set_start_method('spawn')
     torch.set_default_dtype(torch.float32)
+
     model=PV_resnet().cuda()
     start_file=None
     #start_file="./logs/6_1/PV_resnet-16-15857234-180.pkl"
     #start_file="./logs/8/PV_resnet-16-15857234-40.pkl"
-    start_file="./logs/17/PV_resnet-16-15859346-520.pkl"
+    #start_file="./logs/17/PV_resnet-16-15859346-520.pkl"
     if start_file!=None:
         model.load_state_dict(torch.load(start_file,map_location="cuda"))
         log("load from %s"%(start_file))
     else:
         log("init model %s"%(model))
     #test_must_win(model)
-    play_tui(model)
+    #play_tui(model,human_color=1)
     #test_push_data()
     #test_vs_noth(model)
-    #train(model)
+    train(model)

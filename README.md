@@ -12,7 +12,7 @@ This project takes advantage of [Gongzhu-Society](https://github.com/Gongzhu-Soc
 我们对我们 AI 的行为进行了一些统计。
 本项目使用了 [Gongzhu-Society](https://github.com/Gongzhu-Society/MCTS) 的蒙特卡洛树搜索和 alpha-beta 剪枝包。
 
-### Environment Setup and Get Started
+## Environment Setup and Get Started
 
 ```
 git clone https://github.com/Victerose/FiveStone-Gongzhu.git
@@ -46,7 +46,7 @@ And my AI indeed did that!
    <img width="70%" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/typical_game.png?raw=true"/>
 </div>
 
-### File Description
+## File Description
 
 * fivestone_conv.py: Gomoku using "classical" alpha-beta pruning. It contains
     * `def log(msg,l=1,end="\n",logfile=None,fileonly=False):` a utility function for logging.
@@ -69,7 +69,7 @@ And my AI indeed did that!
     * `def gen_data_sub(model,num_games,randseed,data_q,PARA_DICT):` and `def gen_data_multithread(model,num_games):` multiprocessing version of `gen_data`.
     * `def train(model):` train the model.
 
-### Parameter in `fivestone_zero` Explained
+## Parameter in `fivestone_zero` Explained
 
 There is a `PARA_DICT` in `fivestone_zero.py`.
 By diving into these parameters, one can get a better understanding of our program.
@@ -88,22 +88,22 @@ Among these parameters, __SHIFT_MAX__ is the most important one.
 AI will not improve when SHIFT_MAX is set to 0.
 The importance of __FINAL_LEN__ and __FINAL_BIAS__ are to be studied.
 
-### Train It!
+## Training and Abelation Experiments
 
 The following figure is for the 17th try.
 Its main parameters are `{"ACTION_NUM": 100, "POSSACT_RAD": 1, "FINAL_LEN": 4, "FINAL_BIAS": 0.5, "UID_ROT": 4, "SHIFT_MAX":3}`.
-Its raw network win rate against man-craft AI stables at half-half after 200 epochs (each epoch contains 30 games).
-The most impressive point is, the steps taken for five in a line without opponent drop to around 5 (of course, 5 is the minimal possible value) after only 5 epochs!
+The blue dashed line is the steps taken to make five in a line without an opponent, corresponding to the left vertical axis.
+The solid line with round data points is the win rate in percent of the raw network against man-craft AI with search deep 1, corresponding to the right vertical axis.
+The win rate stables at half-half after 200 epochs (each epoch contains 30 games).
+The most impressive point is, the steps taken to make five in a line drop to around 5 (of course, 5 is the minimal possible value) after only 5 epochs!
 
 <div align=center>
    <img width="50%" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/try17.png?raw=true"/>
 </div>
 
-### Abelation Experiments
+## Statistics and Behaviour Analyse
 
-### Statistics and Behaviour Analyse
-
-### Todo List
+## Todo List
 
 - [ ] Ablation experiment of `FINAL_LEN` and `FINAL_BIAS`.
 - [ ] Ablation experiment of `SHIFT_MAX`.
