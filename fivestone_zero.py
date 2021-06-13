@@ -15,7 +15,7 @@ from benchmark_utils import open_bl,benchmark,vs_noth
 
 PARA_DICT={ "ACTION_NUM":100, "POSSACT_RAD":1, "AB_DEEP":1, "SOFTK":4,
             "LOSS_P_WT":1.0, "LOSS_P_WT_RATIO": 0.5, "STDP_WT": 5.0, "BATCH_SIZE":64,
-            "FINAL_LEN": 4, "FINAL_BIAS": 0.5, "UID_ROT": 4, "SHIFT_MAX":2}
+            "FINAL_LEN": 4, "FINAL_BIAS": 0.5, "UID_ROT": 4, "SHIFT_MAX":0}
 
 class FiveStone_ZERO(FiveStone_CNN):
     def reset(self):
