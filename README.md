@@ -36,7 +36,7 @@ To change your color or set search deep, please modify the codes.
 I am ○ while AI ●.
 He decided to play `(4, 7)` (this is matrix index) after 886 searches.
 Then the board is printed. Then I input my next step, `2,-1` (in XY coordinates).
-Clever friends may find that I have lost at this step (AI will get to a 3-3 after two rounds).
+Clever friends may find that, in the current situation, my defeat is doomed (AI will get to a three-three/four-three after two rounds).
 And my AI indeed did that!
 
 <div align=center>
@@ -89,10 +89,11 @@ The importance of __FINAL_LEN__ and __FINAL_BIAS__ are to be studied.
 
 * The following figure is for the 17th try.
 Its main parameters are `{"ACTION_NUM": 100, "POSSACT_RAD": 1, "FINAL_LEN": 4, "FINAL_BIAS": 0.5, "UID_ROT": 4, "SHIFT_MAX":3}`.
-The blue dashed line is the steps taken to make five in a line without an opponent, corresponding to the left vertical axis.
-The solid line with round data points is the win rate in percent of the raw network against man-craft AI with search deep 1, corresponding to the right vertical axis.
+The dashed blue line indicates the number of steps taken to make five in a line (FIAL) with no opponent assigned, corresponding to the left vertical axis.
+Its minimal possible value is 5, while a randomly initialized network's FIAL is around 30.
+The solid lines with round data points are the win rate in percent of the raw network against man-craft AI with search deep 1, corresponding to the right vertical axis.
 The win rate stables at half-half after 200 epochs (each epoch contains 30 games).
-The most impressive point is, the steps taken to make five in a line drop to around 5 (of course, 5 is the minimal possible value) after only 5 epochs!
+The most impressive point is, the FIAL drops to around 5 after only 5 epochs!
 
 <div align=center>
    <img width="50%" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/try17.png?raw=true"/>
