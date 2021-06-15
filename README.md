@@ -99,12 +99,25 @@ The most impressive point is, the FIAL drops to around 5 after only 5 epochs!
    <img width="50%" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/try17.png?raw=true"/>
 </div>
 
+* __Ablation Experiment of SHIFT_MAX__
+To study the influence of SHIFT_MAX, we train the network with other pararmeters fixed and SHIFT_MAX varies from 0 to 4.
+The result is as follows.
+
+<div align=center><table>
+    <tr>
+        <th><img width="45%" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/try17-2.png?raw=true"/></th>
+        <th><img width="45%" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/try18.png?raw=true"/></th>
+        <th><img width="45%" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/try20.png?raw=true"/></th>
+        <th><img width="45%" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/try19.png?raw=true"/></th>
+    </tr>
+</table></div>
+
 ## Statistics and Behaviour Analyse
 
 ## Todo List
 
 - [ ] Ablation experiment of `FINAL_LEN` and `FINAL_BIAS`.
-- [ ] Ablation experiment of `SHIFT_MAX`.
+- [-] Ablation experiment of `SHIFT_MAX`.
 - [ ] Ablation experiment of `ACTION_NUM` and `POSSACT_RAD`.
 - [ ] Opening statistics.
 - [ ] Behaviour statistics.
