@@ -103,12 +103,18 @@ The most impressive point is, the FIAL drops to around 5 after only 5 epochs!
 To study the influence of SHIFT_MAX, we train the network with other pararmeters fixed and SHIFT_MAX varies from 0 to 4.
 The result is as follows.
 
-<div align=center><table>
+<div style="overflow:scroll;width:600px"><table border="0">
     <tr>
-        <th><img width="45%" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/try17-2.png?raw=true"/></th>
-        <th><img width="45%" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/try18.png?raw=true"/></th>
-        <th><img width="45%" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/try20.png?raw=true"/></th>
-        <th><img width="45%" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/try19.png?raw=true"/></th>
+        <th><img width="576px" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/try17-2.png?raw=true"/></th>
+        <th><img width="576px" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/try18.png?raw=true"/></th>
+        <th><img width="576px" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/try20.png?raw=true"/></th>
+        <th><img width="576px" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/try19.png?raw=true"/></th>
+    </tr>
+    <tr>
+        <th>SHIFT_MAX=3</th>
+        <th>SHIFT_MAX=2</th>
+        <th>SHIFT_MAX=1</th>
+        <th>SHIFT_MAX=0</th>
     </tr>
 </table></div>
 
@@ -117,7 +123,7 @@ The result is as follows.
 ## Todo List
 
 - [ ] Ablation experiment of `FINAL_LEN` and `FINAL_BIAS`.
-- [-] Ablation experiment of `SHIFT_MAX`.
+- [x] Ablation experiment of `SHIFT_MAX`.
 - [ ] Ablation experiment of `ACTION_NUM` and `POSSACT_RAD`.
 - [ ] Opening statistics.
 - [ ] Behaviour statistics.
