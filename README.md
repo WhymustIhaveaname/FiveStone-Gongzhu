@@ -49,6 +49,42 @@ And my AI indeed did that!
    <img width="70%" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/typical_game.png?raw=true"/>
 </div>
 
+## Kernel Visualization
+
+* The input of the neural network has three channels, stand for black stones in one hot, white stones in one hot, and who's turn (black 1 white -1).
+Then the input goes through a convolution layer with 64 6x6 kernels. And then some resnet layers, etc.
+The first convolution layer can be visualized by encoding the three input channels as RGB.
+We show black and white stones in Green and Blue, who's turn in Red.
+The following pictures are the kernels for a typical training.
+
+<table border="0">
+    <tr>
+        <th><img width="264px" style=“image-redering:pixelated" src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/17th-520-R2G0B1.png"/></th>
+        <th><img width="264px" src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/17th-520-ch2.png"/></th>
+        <th><img width="264px" src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/17th-520-ch0.png"/></th>
+        <th><img width="264px" src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/17th-520-ch1.png"/></th>
+    </tr>
+    <tr>
+        <th>Three Channels</th>
+        <th>Who's Turn</th>
+        <th>Black stones</th>
+        <th>White stones</th>
+    </tr>
+</table>
+
+* This gif shows how these kernels changed during the training.
+
+<div align=center>
+   <img width="40%" src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/17th-500ms-min.gif"/>
+</div>
+
+* __Interesting (also unsolved) Phenomena__ We cannot understand why some kernel gets black (indicating all zeros) after about 240 epochs. We have some conjectures.
+    * The training data size is not large enough.
+      So the neural network can only learn some rough knowledge rather than details.
+    * The resnet following the first layer is not wide enough, not enough to analyze these pieces of information.
+    * This training architecture has the ability to "purify itself" or "distillate simultaneously".
+      It abandons useless features during the training just like we humans.
+
 ## File Description
 
 * fivestone_conv.py: Gomoku using "classical" alpha-beta pruning. It contains
@@ -71,43 +107,6 @@ And my AI indeed did that!
     * `def gen_data(model,num_games,randseed,data_q,PARA_DICT):` generate train data by self playing.
     * `def gen_data_sub(model,num_games,randseed,data_q,PARA_DICT):` and `def gen_data_multithread(model,num_games):` multiprocessing version of `gen_data`.
     * `def train(model):` train the model.
-
-## Kernel Visualization
-
-* The input of the neural network has three channels, stand for black stones in one hot, white stones in one hot, and who's turn (black 1 white -1).
-Then the input goes through a convolution layer with 64 6x6 kernels. And then some resnet layers, etc.
-The first convolution layer can be visualized by encoding the three input channels as RGB.
-We show black and white stones in Green and Blue, who's turn in Red.
-The following pictures are the kernels for a typical training.
-
-<table border="0">
-    <tr>
-        <th><img src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/17th-520-R2G0B1.png"/></th>
-        <th><img src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/17th-520-ch2.png"/></th>
-        <th><img src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/17th-520-ch0.png"/></th>
-        <th><img src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/17th-520-ch1.png"/></th>
-    </tr>
-    <tr>
-        <th>Three Channels</th>
-        <th>Who's Turn</th>
-        <th>Black stones</th>
-        <th>White stones</th>
-    </tr>
-</table>
-
-* This gif shows how these kernels changed during the training.
-
-<div align=center>
-   <img width="30%" src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/17th-500ms-min.gif"/>
-</div>
-
-* __interesting (also unsolved) phenomena__ We cannot understand why some kernel gets black (indicating all zeros) after about 240 epochs. We have some conjectures.
-    * The training data size is not large enough.
-      So the neural network can only learn some rough knowledge rather than details.
-    * The resnet following the first layer is not wide enough, not enough to analyze these pieces of information.
-    * This training architecture has the ability to "purify itself" or "distillate simultaneously".
-      It abandons useless features during the training just like we humans.
-
 
 ## Parameter in `fivestone_zero` Explained
 
