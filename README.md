@@ -12,6 +12,12 @@ This project takes advantage of [Gongzhu-Society](https://github.com/Gongzhu-Soc
 我们对我们 AI 的行为进行了一些统计。
 本项目使用了 [Gongzhu-Society](https://github.com/Gongzhu-Society/MCTS) 的蒙特卡洛树搜索和 alpha-beta 剪枝包。
 
+## Features
+
+* Generate MANY train data from one by rotation, flip, and translation.
+* Beautiful terminal output.
+* Visualization of convolutional layer and interesting (also unsolved) phenomena in visualization.
+
 ## Environment Setup and Get Started
 
 ```
@@ -82,8 +88,7 @@ Its keys have the following meanings.
 * `UID_ROT=4`: each board will be rotated 4 times to generate 4 different train data.
 
 Among these parameters, __SHIFT_MAX__ is the most important one.
-AI will not improve when SHIFT_MAX is set to 0.
-The importance of __FINAL_LEN__ and __FINAL_BIAS__ are to be studied.
+AI will improve but very slow when SHIFT_MAX is set to 0.
 
 ## Training and Abelation Experiments
 
@@ -96,19 +101,22 @@ The win rate stables at half-half after 200 epochs (each epoch contains 30 games
 The most impressive point is, the FIAL drops to around 5 after only 5 epochs!
 
 <div align=center>
-   <img width="50%" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/try17.png?raw=true"/>
+   <img width="50%" src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/try17.png"/>
 </div>
 
 * __Ablation Experiment of SHIFT_MAX__
-To study the influence of SHIFT_MAX, we train the network with other pararmeters fixed and SHIFT_MAX varies from 0 to 4.
+The openings are shifted by a random integer between -SHIFT_MAX and SHIFT_MAX so that the neural network may learn more general cases.
+To study the influence of SHIFT_MAX, we train the network with other parameters fixed and SHIFT_MAX varies from 0 to 3.
 The result is as follows.
+`SHIFT_MAX!=0` is better than `SHIFT_MAX==0`.
+Although the value of SHIFT_MAX has little effect as long as it is greater than 0, I decide to fix it to 3 in future experiments.
 
-<div style="overflow:scroll;width:600px"><table border="0">
+<table border="0">
     <tr>
-        <th><img width="576px" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/try17-2.png?raw=true"/></th>
-        <th><img width="576px" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/try18.png?raw=true"/></th>
-        <th><img width="576px" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/try20.png?raw=true"/></th>
-        <th><img width="576px" src="https://github.com/WhymustIhaveaname/FiveStone-Gongzhu/blob/main/figures/try19.png?raw=true"/></th>
+        <th><img width="576px" src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/try17-2.png"/></th>
+        <th><img width="576px" src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/try18.png"/></th>
+        <th><img width="576px" src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/try20.png"/></th>
+        <th><img width="576px" src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/try19.png"/></th>
     </tr>
     <tr>
         <th>SHIFT_MAX=3</th>
@@ -116,13 +124,30 @@ The result is as follows.
         <th>SHIFT_MAX=1</th>
         <th>SHIFT_MAX=0</th>
     </tr>
-</table></div>
+</table>
+
+* __Ablation Experiment of FINAL_LEN__
+The last `FINAL_LEN` steps of a game will be thought of as "final".
+The final steps' values will be modified based on the final result.
+I believed that this trick can make the neural network learn faster.
+However, as shown by the following figures, we'd better turn it off.
+
+<table border="0">
+    <tr>
+        <th><img src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/try17-3.png"/></th>
+        <th><img src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/try21.png"/></th>
+    </tr>
+    <tr>
+        <th>FINAL_LEN=4</th>
+        <th>FINAL_LEN=0</th>
+    </tr>
+</table>
 
 ## Statistics and Behaviour Analyse
 
 ## Todo List
 
-- [ ] Ablation experiment of `FINAL_LEN` and `FINAL_BIAS`.
+- [x] Ablation experiment of `FINAL_LEN` and `FINAL_BIAS`.
 - [x] Ablation experiment of `SHIFT_MAX`.
 - [ ] Ablation experiment of `ACTION_NUM` and `POSSACT_RAD`.
 - [ ] Opening statistics.
