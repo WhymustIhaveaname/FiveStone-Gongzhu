@@ -59,10 +59,10 @@ The following pictures are the kernels for a typical training.
 
 <table border="0">
     <tr>
-        <th><img width="264px" style=“image-redering:pixelated" src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/17th-520-R2G0B1.png"/></th>
-        <th><img width="264px" src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/17th-520-ch2.png"/></th>
-        <th><img width="264px" src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/17th-520-ch0.png"/></th>
-        <th><img width="264px" src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/17th-520-ch1.png"/></th>
+        <th><img src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/17th-520-R2G0B1-x4.png"/></th>
+        <th><img src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/17th-520-ch2-x4.png"/></th>
+        <th><img src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/17th-520-ch0-x4.png"/></th>
+        <th><img src="https://raw.githubusercontent.com/WhymustIhaveaname/FiveStone-Gongzhu/main/figures/17th-520-ch1-x4.png"/></th>
     </tr>
     <tr>
         <th>Three Channels</th>
