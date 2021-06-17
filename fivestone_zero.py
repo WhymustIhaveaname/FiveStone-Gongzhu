@@ -15,7 +15,8 @@ from benchmark_utils import open_bl,benchmark,vs_noth
 
 PARA_DICT={ "ACTION_NUM":100, "POSSACT_RAD":1, "AB_DEEP":1, "SOFTK":4,
             "LOSS_P_WT":1.0, "LOSS_P_WT_RATIO": 0.5, "STDP_WT": 5.0, "BATCH_SIZE":64,
-            "FINAL_LEN": 0, "FINAL_BIAS": -1, "UID_ROT": 4, "SHIFT_MAX":3}
+            #"FINAL_LEN": 0, "FINAL_BIAS": -1, 
+            "UID_ROT": 4, "SHIFT_MAX":3}
 
 class FiveStone_ZERO(FiveStone_CNN):
     def reset(self):
@@ -116,13 +117,13 @@ def gen_data(model,num_games,randseed,PARA_DICT):
             #state=state.takeAction(lkv[r][0])
             state=state.takeAction(best_action)
         #pretty_board(state);input()
-        dlen_2=len(train_datas)
+        """dlen_2=len(train_datas)
         result=state.getReward().item()
 
         fin_len=PARA_DICT["FINAL_LEN"]*2*PARA_DICT["UID_ROT"]
         for j in range(min(dlen_2-dlen_1,fin_len)):
             wt=max(0,j/fin_len-PARA_DICT["FINAL_BIAS"])
-            train_datas[-j-1][1]=train_datas[-j-1][1]*wt+result*(1-wt)
+            train_datas[-j-1][1]=train_datas[-j-1][1]*wt+result*(1-wt)"""
     return train_datas
 
 def gen_data_sub(model,num_games,randseed,data_q,PARA_DICT):
