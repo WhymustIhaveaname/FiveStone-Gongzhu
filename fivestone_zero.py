@@ -7,21 +7,84 @@ import torch.nn.functional as F
 from torch.multiprocessing import Process,Queue
 
 from MCTS.mcts import abpruning
-from fivestone_conv import log,pretty_board,get_tui_input
+from fivestone_conv import log,pretty_board,get_tui_input,FiveStoneState
 
 torch.set_default_dtype(torch.float16)
-from net_topo import PV_resnet, FiveStone_CNN
+from net_topo import PV_resnet
 from benchmark_utils import open_bl,benchmark,vs_noth
 
-PARA_DICT={ "ACTION_NUM":100, "POSSACT_RAD":1, "AB_DEEP":1, "SOFTK":4,
-            "LOSS_P_WT":1.0, "LOSS_P_WT_RATIO": 0.5, "STDP_WT": 5.0, "BATCH_SIZE":64,
-            "FINAL_LEN": 0, "FINAL_BIAS": -1, "UID_ROT": 4, "SHIFT_MAX":3}
+gpu_ids = [0,1,2,3]
+num_thread_per_gpu = 3
+num_games_per_thread = 10
 
-class FiveStone_ZERO(FiveStone_CNN):
+PARA_DICT={ "ACTION_NUM":100, "POSSACT_RAD":1, "AB_DEEP":1, "SOFTK":4,
+            "LOSS_P_WT":1.0, "LOSS_P_WT_RATIO": 0.5, "STDP_WT": 0.0, "BATCH_SIZE":64,
+            #"FINAL_LEN": 0, "FINAL_BIAS": -1, 
+            "UID_ROT": 4, "SHIFT_MAX":3}
+
+class FiveStone_ZERO(FiveStoneState):
+    def __init__(self, model, device):
+        self.device = device
+        self.model = model
+
+        self.kern_5_hori = torch.tensor([[[0,0,0,0,0],[0,0,0,0,0],[1/5,1/5,1/5,1/5,1/5],[0,0,0,0,0],[0,0,0,0,0]]],device=self.device,dtype=torch.float16)
+        self.kern_5_diag = torch.tensor([[[1/5,0,0,0,0],[0,1/5,0,0,0],[0,0,1/5,0,0],[0,0,0,1/5,0],[0,0,0,0,1/5]]],device=self.device,dtype=torch.float16)
+        self.kern_5 = torch.stack((self.kern_5_hori, self.kern_5_diag, self.kern_5_hori.rot90(1,[1,2]), self.kern_5_diag.rot90(1,[1,2])))
+        self.kern_possact_5x5 = torch.tensor([[[[1.,1,1,1,1],[1,2,2,2,1],[1,2,-1024,2,1],[1,2,2,2,1],[1,1,1,1,1]]]],device=self.device,dtype=torch.float16)
+        self.kern_possact_3x3 = torch.tensor([[[[1.,1,1],[1,-1024,1],[1,1,1]]]],device=self.device,dtype=torch.float16)
+
+        self.reset()
+
+
     def reset(self):
-        self.board = torch.zeros(9,9,device="cuda",dtype=torch.float16)
+        self.board = torch.zeros(9,9,device=self.device,dtype=torch.float16)
         self.board[4,4] = 1.0
         self.currentPlayer = -1
+
+    def isTerminal(self):
+        conv1 = F.conv2d(self.board.view(1,1,9,9), self.kern_5, padding=2)
+        if conv1.max() >= 0.9 or conv1.min() <= -0.9:
+            return True
+        if self.board.abs().sum()==81:
+            return True
+        return False
+
+    def getReward(self):
+        conv1 = F.conv2d(self.board.view(1,1,9,9), self.kern_5, padding=2)
+        if conv1.max() >= 0.9:
+            return torch.tensor([1.0], device=self.device)
+        elif conv1.min() <= -0.9:
+            return torch.tensor([-1.0], device=self.device)
+        if self.board.sum()==81:
+            return torch.tensor([0.0], device=self.device)
+
+        with torch.no_grad():
+            input_data=self.gen_input().view((1,3,9,9))
+            _,value = self.model(input_data)
+            value=value.view(1).clip(-0.99,0.99)
+        return value
+
+    def gen_input(self):
+        return torch.stack([(self.board==1).half(),
+                            (self.board==-1).half(),
+                            torch.ones(9,9,device=self.device,dtype=torch.float16)*self.currentPlayer])
+
+    def policy_choice_best(self):
+        input_data=self.gen_input()
+        policy,value=self.model(input_data.view((1,3,9,9)))
+        policy=policy.view(9,9)
+        lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if self.board[i,j]==0]
+        best=max(lkv,key=lambda x: x[1])
+        return best[0]
+
+    def policy_choice_softmax(self):
+        input_data=self.gen_input().view((1,3,9,9))
+        policy,value=self.model(input_data)
+        policy=policy.view(9,9)
+        lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if self.board[i,j]==0]
+        lv=F.softmax(torch.tensor([v for k,v in lkv]),dim=0)
+        r=torch.multinomial(lv,1)
+        return lkv[r][0]
 
     def getPossibleActions(self):
         """cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_3x3, padding=1)
@@ -30,6 +93,8 @@ class FiveStone_ZERO(FiveStone_CNN):
         l_temp.sort(key=lambda x:-1*x[0])
         return [i[1] for i in l_temp]"""
         input_data=self.gen_input().view((1,3,9,9))
+
+
         policy,value=self.model(input_data)
         policy=policy.view(9,9)
         if self.radius in (1,2):
@@ -75,13 +140,21 @@ def balance_bkwt(datalist):
         this_data=[in_mat_s,-1*best_val,target_p,legal_msk]
         datalist.append(this_data)
 
-def gen_data(model,num_games,randseed,PARA_DICT):
+def gen_data(model,num_games,gpu_id,randseed,PARA_DICT):
+    device = torch.device("cuda:%d"%(gpu_id))
+    #log("%d %d %s"%(gpu_id,randseed,model.conv1.weight.device))
+    #log("%d %d %s"%(gpu_id,randseed,model.conv1.weight.type()))
+    model = model.to(device)
+    #log("%d %d %s"%(gpu_id,randseed,model.conv1.weight.device))
+    #log("%d %d %s"%(gpu_id,randseed,model.conv1.weight.type()))
+    
     train_datas=[]
     searcher=abpruning(deep=PARA_DICT["AB_DEEP"])
-    state = FiveStone_ZERO(model)
+    state = FiveStone_ZERO(model, device)
     state.target_num=PARA_DICT["ACTION_NUM"]
     state.radius=PARA_DICT["POSSACT_RAD"]
     random.seed(str(randseed))
+
     for i in range(num_games):
         state.reset()
         open_num=random.randint(0,len(open_bl)-1)
@@ -105,7 +178,7 @@ def gen_data(model,num_games,randseed,PARA_DICT):
             lkv=[(k,v) for k,v in searcher.children.items()]
             lv=torch.tensor([v for k,v in lkv],dtype=torch.float32)*state.currentPlayer
             lv=F.softmax(lv*PARA_DICT["SOFTK"],dim=0)
-            target_p=torch.zeros(9,9,device="cuda",dtype=torch.float32)
+            target_p=torch.zeros(9,9,device=state.device,dtype=torch.float32)
             for j in range(len(lkv)):
                 target_p[lkv[j][0]]=lv[j]
             legal_mask=(state.board==0).float()
@@ -116,18 +189,18 @@ def gen_data(model,num_games,randseed,PARA_DICT):
             #state=state.takeAction(lkv[r][0])
             state=state.takeAction(best_action)
         #pretty_board(state);input()
-        dlen_2=len(train_datas)
+        """dlen_2=len(train_datas)
         result=state.getReward().item()
 
         fin_len=PARA_DICT["FINAL_LEN"]*2*PARA_DICT["UID_ROT"]
         for j in range(min(dlen_2-dlen_1,fin_len)):
             wt=max(0,j/fin_len-PARA_DICT["FINAL_BIAS"])
-            train_datas[-j-1][1]=train_datas[-j-1][1]*wt+result*(1-wt)
+            train_datas[-j-1][1]=train_datas[-j-1][1]*wt+result*(1-wt)"""
     return train_datas
 
-def gen_data_sub(model,num_games,randseed,data_q,PARA_DICT):
+def gen_data_sub(model,num_games,gpu_id,randseed,data_q,PARA_DICT):
     try:
-        datalist=gen_data(model,num_games,randseed,PARA_DICT)
+        datalist=gen_data(model,num_games,gpu_id,randseed,PARA_DICT)
     except:
         log("",l=3)
         datalist=[]
@@ -137,13 +210,16 @@ def gen_data_sub(model,num_games,randseed,data_q,PARA_DICT):
     #data_q.put((fd,fname,tuple(lre)))
     data_q.put((fd,fname))
 
-def gen_data_multithread(model,num_games,num_thread):
+def gen_data_multithread(model,num_games,gpu_ids,thread_num):
+    model = copy.deepcopy(model).eval().half()
+    model = model.to("cpu")
     data_q=Queue()
     plist=[]
     t=int(time.time())
-    for i in range(num_thread):
-        plist.append(Process(target=gen_data_sub,args=(copy.deepcopy(model).eval().half(),num_games,i+t,data_q,PARA_DICT)))
-        plist[-1].start()
+    for i in range(thread_num):
+        for j in gpu_ids:
+            plist.append(Process(target=gen_data_sub,args=(copy.deepcopy(model),num_games,j,i+j+t,data_q,PARA_DICT)))
+            plist[-1].start()
     rlist=[]
     for p in plist:
         p.join()
@@ -153,7 +229,7 @@ def gen_data_multithread(model,num_games,num_thread):
         os.unlink(fname)
     return rlist
 
-def train(model):
+def train(model, train_device):
     torch.set_default_dtype(torch.float32)
     optim = torch.optim.Adam(model.parameters(),lr=0.0005,betas=(0.3,0.999),eps=1e-07,weight_decay=1e-4,amsgrad=False)
     log("optim: %s"%(optim.__dict__['defaults'],))
@@ -169,15 +245,17 @@ def train(model):
             save_name='./model/%s-%s-%s-%d.pkl'%(model.__class__.__name__,model.num_layers(),model.num_paras(),epoch)
             torch.save(model.state_dict(),save_name)
 
-        if print_flag and epoch%5==0:
-            state_nn=FiveStone_ZERO(copy.deepcopy(model).eval().half())
+        if print_flag and epoch%5==0 and epoch>0:
+            state_nn=FiveStone_ZERO(copy.deepcopy(model).eval().half(), train_device)
             state_nn.target_num=100
             state_nn.radius=2 # do not touch benchmark parameters!
             vs_noth(state_nn,epoch)
             benchmark(state_nn,epoch)
 
-        train_datas = gen_data(copy.deepcopy(model).eval().half(),30,time.time(),PARA_DICT)
-        #train_datas = gen_data_multithread(model,10,3)
+        #train_datas = gen_data(copy.deepcopy(model).eval().half(),30,1,time.time(),PARA_DICT)
+        train_datas = gen_data_multithread(model,num_games_per_thread,gpu_ids,num_thread_per_gpu)
+        train_datas = [( i.to(train_device),j.to(train_device),k.to(train_device),l.to(train_device) ) for i,j,k,l in train_datas]
+
         balance_bkwt(train_datas)
         trainloader = torch.utils.data.DataLoader(train_datas,batch_size=PARA_DICT["BATCH_SIZE"],shuffle=True,drop_last=True)
 
@@ -283,13 +361,16 @@ if __name__=="__main__":
     torch.multiprocessing.set_start_method('spawn')
     torch.set_default_dtype(torch.float32)
 
-    model=PV_resnet().cuda()
+    log(torch.cuda.is_available())
+    log(torch.cuda.device_count())
+    train_device = torch.device("cuda:0")
+    model=PV_resnet().to(train_device)
     start_file=None
     #start_file="./logs/6_1/PV_resnet-16-15857234-180.pkl"
     #start_file="./logs/8/PV_resnet-16-15857234-40.pkl"
     #start_file="./logs/17/PV_resnet-16-15859346-520.pkl"
     if start_file!=None:
-        model.load_state_dict(torch.load(start_file,map_location="cuda"))
+        model.load_state_dict(torch.load(start_file,map_location="cuda:2"))
         log("load from %s"%(start_file))
     else:
         log("init model %s"%(model))
@@ -297,4 +378,4 @@ if __name__=="__main__":
     #play_tui(model,human_color=1)
     #test_push_data()
     #test_vs_noth(model)
-    train(model)
+    train(model, train_device)
