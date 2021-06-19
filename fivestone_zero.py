@@ -19,7 +19,7 @@ num_games_per_thread = 10
 
 PARA_DICT={ "ACTION_NUM":100, "POSSACT_RAD":1, "AB_DEEP":1, "SOFTK":4,
             "LOSS_P_WT":1.0, "LOSS_P_WT_RATIO": 0.5, "STDP_WT": 0.0, "BATCH_SIZE":64,
-            #"FINAL_LEN": 0, "FINAL_BIAS": -1, 
+            #"FINAL_LEN": 0, "FINAL_BIAS": -1,
             "UID_ROT": 4, "SHIFT_MAX":3}
 
 class FiveStone_ZERO(FiveStoneState):
@@ -147,7 +147,7 @@ def gen_data(model,num_games,gpu_id,randseed,PARA_DICT):
     model = model.to(device)
     #log("%d %d %s"%(gpu_id,randseed,model.conv1.weight.device))
     #log("%d %d %s"%(gpu_id,randseed,model.conv1.weight.type()))
-    
+
     train_datas=[]
     searcher=abpruning(deep=PARA_DICT["AB_DEEP"])
     state = FiveStone_ZERO(model, device)
