@@ -84,8 +84,8 @@ The following pictures are the kernels for a typical training.
       After enlarging train data by 4 in every epoch, the blacken phenomena even comes earlier (after 60 epoch)!
       And the win rate against alpha-beta pruning AI is keeping increasing.
       So maybe "blacken" is not a bad thing.
-    * I minus the target function by `5*policy_output.std()`.
-      Maybe this term (although very small) is too singular.
+    * ~~I minus the target function by `5*policy_output.std()`.
+      Maybe this term (although very small) is too singular.~~
     * The resnet following the first layer is not wide enough, not enough to analyze these pieces of information.
     * This training architecture has the ability to "purify itself" or "distillate simultaneously".
       It abandons useless features during the training just like we humans.

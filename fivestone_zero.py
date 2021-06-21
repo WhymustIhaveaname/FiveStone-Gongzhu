@@ -10,12 +10,14 @@ from MCTS.mcts import abpruning
 from fivestone_conv import log,pretty_board,get_tui_input,FiveStoneState
 
 torch.set_default_dtype(torch.float16)
-from net_topo import PV_resnet
+from net_topo import PV_resnet_wide
 from benchmark_utils import open_bl,benchmark,vs_noth
 
-gpu_ids = [0,1,2,3]
-num_thread_per_gpu = 3
-num_games_per_thread = 10
+# big: [0-3]*3*10=120
+# normal: 30
+gpu_ids = [1,2,3]
+num_thread_per_gpu = 1
+num_games_per_thread = 40
 
 PARA_DICT={ "ACTION_NUM":100, "POSSACT_RAD":1, "AB_DEEP":1, "SOFTK":4,
             "LOSS_P_WT":1.0, "LOSS_P_WT_RATIO": 0.5, "STDP_WT": 0.0, "BATCH_SIZE":64,
@@ -34,7 +36,6 @@ class FiveStone_ZERO(FiveStoneState):
         self.kern_possact_3x3 = torch.tensor([[[[1.,1,1],[1,-1024,1],[1,1,1]]]],device=self.device,dtype=torch.float16)
 
         self.reset()
-
 
     def reset(self):
         self.board = torch.zeros(9,9,device=self.device,dtype=torch.float16)
@@ -364,13 +365,14 @@ if __name__=="__main__":
     log(torch.cuda.is_available())
     log(torch.cuda.device_count())
     train_device = torch.device("cuda:0")
-    model=PV_resnet().to(train_device)
+    #model=PV_resnet().to(train_device)
+    model=PV_resnet_wide().to(train_device)
     start_file=None
     #start_file="./logs/6_1/PV_resnet-16-15857234-180.pkl"
     #start_file="./logs/8/PV_resnet-16-15857234-40.pkl"
     #start_file="./logs/17/PV_resnet-16-15859346-520.pkl"
     if start_file!=None:
-        model.load_state_dict(torch.load(start_file,map_location="cuda:2"))
+        model.load_state_dict(torch.load(start_file,map_location=train_device))
         log("load from %s"%(start_file))
     else:
         log("init model %s"%(model))

@@ -35,8 +35,8 @@ def to_gif(pattern,iter,end_dup,dur,save_name):
 if __name__=="__main__":
     #vis_evolution()
     #vis_kern("./logs/17/PV_resnet-16-15859346-%d.pkl","17th-%d.png",40,save_flag=False)
-    num=17
-    it=range(0,521,20)
+    num=23
+    it=range(0,181,20)
     for i in it:
         vis_kern("./logs/%d/PV_resnet-16-15859346-%%d.pkl"%(num),"%dth-%%d.png"%(num),i)
-    to_gif("./%dth-%%d.png"%(num),it,1,0.5,"%dth-500ms.gif"%(num))
+    to_gif("./%dth-%%d.png"%(num),it,1,0.5,"%dth-halfs.gif"%(num))
