@@ -81,12 +81,15 @@ The following pictures are the kernels for a typical training.
 * __Interesting (also unsolved) Phenomena__ We cannot understand why some kernel gets black (indicating all zeros) after about 240 epochs. We have some conjectures.
     * ~~The training data size is not large enough.
       So the neural network can only learn some rough knowledge rather than details.~~
-      After enlarging train data by 4 in every epoch, the blacken phenomena even comes earlier (after 60 epoch)!
+      (try22) After enlarging train data by 4 in every epoch, the blacken phenomena even comes earlier (after 60 epoch)!
       And the win rate against alpha-beta pruning AI is keeping increasing.
       So maybe "blacken" is not a bad thing.
     * ~~I minus the target function by `5*policy_output.std()`.
-      Maybe this term (although very small) is too singular.~~
+      Maybe this term (although very small) is too singular.~~ (try23)
     * The resnet following the first layer is not wide enough, not enough to analyze these pieces of information.
+      I think this conjecture is the correct one.
+      (try 24) Enlarge the number of 3x3 kernel by 2 (the disk size of the network, as a result, gets larger by 3 times).
+      The number of kernels blackened after 200 epochs decrease from about 35 to 28.
     * This training architecture has the ability to "purify itself" or "distillate simultaneously".
       It abandons useless features during the training just like we humans.
 
@@ -194,4 +197,4 @@ However, as shown by the following figures, we'd better turn it off.
 - [ ] Opening statistics.
 - [ ] Behaviour statistics.
 - [ ] Puzzles solving. (尤其是双杀)
-- [ ] Add more pretty figures.
+- [x] Add more pretty figures.

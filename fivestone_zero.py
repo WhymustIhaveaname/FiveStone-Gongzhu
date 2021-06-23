@@ -10,14 +10,14 @@ from MCTS.mcts import abpruning
 from fivestone_conv import log,pretty_board,get_tui_input,FiveStoneState
 
 torch.set_default_dtype(torch.float16)
-from net_topo import PV_resnet_wide
+from net_topo import PV_resnet_wide_mid
 from benchmark_utils import open_bl,benchmark,vs_noth
 
 # big: [0-3]*3*10=120
 # normal: 30
 gpu_ids = [1,2,3]
-num_thread_per_gpu = 1
-num_games_per_thread = 40
+num_thread_per_gpu = 2
+num_games_per_thread = 20
 
 PARA_DICT={ "ACTION_NUM":100, "POSSACT_RAD":1, "AB_DEEP":1, "SOFTK":4,
             "LOSS_P_WT":1.0, "LOSS_P_WT_RATIO": 0.5, "STDP_WT": 0.0, "BATCH_SIZE":64,
@@ -236,7 +236,7 @@ def train(model, train_device):
     log("optim: %s"%(optim.__dict__['defaults'],))
     log("PARA_DICT: %s"%(PARA_DICT))
 
-    for epoch in range(600+1):
+    for epoch in range(400+1):
         if epoch<3 or (epoch<40 and epoch%5==0) or epoch%10==0:
             print_flag=True
         else:
@@ -366,7 +366,7 @@ if __name__=="__main__":
     log(torch.cuda.device_count())
     train_device = torch.device("cuda:0")
     #model=PV_resnet().to(train_device)
-    model=PV_resnet_wide().to(train_device)
+    model=PV_resnet_wide_mid().to(train_device)
     start_file=None
     #start_file="./logs/6_1/PV_resnet-16-15857234-180.pkl"
     #start_file="./logs/8/PV_resnet-16-15857234-40.pkl"
