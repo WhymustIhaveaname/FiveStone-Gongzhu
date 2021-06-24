@@ -90,6 +90,9 @@ The following pictures are the kernels for a typical training.
       I think this conjecture is the correct one.
       (try 24) Enlarge the number of 3x3 kernel by 2 (the disk size of the network, as a result, gets larger by 3 times).
       The number of kernels blackened after 200 epochs decrease from about 35 to 28.
+      (try 25) However, after decreasing the number of 6x6 kernel of the first layer from 64 to 36,
+      the number of survived kernels decreased.
+    * The learning rate is too large.
     * This training architecture has the ability to "purify itself" or "distillate simultaneously".
       It abandons useless features during the training just like we humans.
 

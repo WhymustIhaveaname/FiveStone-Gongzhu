@@ -10,14 +10,14 @@ from MCTS.mcts import abpruning
 from fivestone_conv import log,pretty_board,get_tui_input,FiveStoneState
 
 torch.set_default_dtype(torch.float16)
-from net_topo import PV_resnet_wide_mid
+from net_topo import PV_resnet_wide_mid, PV_resnet_wide
 from benchmark_utils import open_bl,benchmark,vs_noth
 
 # big: [0-3]*3*10=120
 # normal: 30
-gpu_ids = [1,2,3]
-num_thread_per_gpu = 2
-num_games_per_thread = 20
+gpu_ids = [0,1,2,3]
+num_thread_per_gpu = 6
+num_games_per_thread = 5
 
 PARA_DICT={ "ACTION_NUM":100, "POSSACT_RAD":1, "AB_DEEP":1, "SOFTK":4,
             "LOSS_P_WT":1.0, "LOSS_P_WT_RATIO": 0.5, "STDP_WT": 0.0, "BATCH_SIZE":64,
@@ -232,7 +232,7 @@ def gen_data_multithread(model,num_games,gpu_ids,thread_num):
 
 def train(model, train_device):
     torch.set_default_dtype(torch.float32)
-    optim = torch.optim.Adam(model.parameters(),lr=0.0005,betas=(0.3,0.999),eps=1e-07,weight_decay=1e-4,amsgrad=False)
+    optim = torch.optim.Adam(model.parameters(),lr=0.0001,betas=(0.3,0.999),eps=1e-07,weight_decay=1e-4,amsgrad=False)
     log("optim: %s"%(optim.__dict__['defaults'],))
     log("PARA_DICT: %s"%(PARA_DICT))
 
@@ -366,7 +366,7 @@ if __name__=="__main__":
     log(torch.cuda.device_count())
     train_device = torch.device("cuda:0")
     #model=PV_resnet().to(train_device)
-    model=PV_resnet_wide_mid().to(train_device)
+    model=PV_resnet_wide().to(train_device)
     start_file=None
     #start_file="./logs/6_1/PV_resnet-16-15857234-180.pkl"
     #start_file="./logs/8/PV_resnet-16-15857234-40.pkl"
