@@ -10,7 +10,7 @@ def log(msg,l=1,end="\n",logfile=None,fileonly=False):
     st=traceback.extract_stack()[-2]
     lstr=LOGLEVEL[l]
     #now_str="%s %03d"%(time.strftime("%y/%m/%d %H:%M:%S",time.localtime()),math.modf(time.time())[0]*1000)
-    now_str="%s %03d"%(time.strftime("%H:%M:%S",time.localtime()),math.modf(time.time())[0]*1000)
+    now_str="%s %03d"%(time.strftime("%m/%d %H:%M:%S",time.localtime()),math.modf(time.time())[0]*1000)
     if l<3:
         tempstr="%s [%s,%s:%d] %s%s"%(now_str,lstr,st.name,st.lineno,str(msg),end)
     else:
@@ -63,49 +63,46 @@ kern_h_diag = gen_kern_diag(kern_h_hori)
 kern_i_hori = torch.tensor([[0,1.,1,1,1,0],[1,0,0,0,0,0],[0,0,0,0,0,1]]).view(3,1,1,6)
 kern_i_diag = gen_kern_diag(kern_i_hori)
 
-#kern_possact_5x5 = torch.tensor([[[[1.,1,1,1,1],[1,2,2,2,1],[1,2,-1024,2,1],[1,2,2,2,1],[1,1,1,1,1]]]])
+kern_possact_5x5_too_slow = torch.tensor([[[[1.,1,1,1,1],[1,2,2,2,1],[1,2,-1024,2,1],[1,2,2,2,1],[1,1,1,1,1]]]])
 kern_possact_3x3 = torch.tensor([[[[1.,1,1],[1,-1024,1],[1,1,1]]]])
 
 class FiveStoneState():
     kernal_hori = torch.tensor([[[0,0,0,0,0],[0,0,0,0,0],[1/5,1/5,1/5,1/5,1/5],[0,0,0,0,0],[0,0,0,0,0]]])
     kernal_diag = torch.tensor([[[1/5,0,0,0,0],[0,1/5,0,0,0],[0,0,1/5,0,0],[0,0,0,1/5,0],[0,0,0,0,1/5]]])
     kern_5 = torch.stack((kernal_hori, kernal_diag, kernal_hori.rot90(1,[1,2]), kernal_diag.rot90(1,[1,2])))
+    BDSZ=15
+    BDMD=7
+    BDAR=225
+    BLACKWIN=10000.0
 
-    def __init__(self,argv=None):
-        self.board = torch.zeros(9,9)
-        self.board[4,4] = 1.0
-        self.currentPlayer = -1
+    def __init__(self):
         self.attack_factor = 0.8
+        self.reset()
 
     def reset(self):
-        self.board = torch.zeros(9,9)
-        self.board[4,4] = 1.0
+        self.board = torch.zeros(self.BDSZ,self.BDSZ)
+        self.board[self.BDMD,self.BDMD] = 1.0
         self.currentPlayer = -1
+        self.is_terminal=False
+        self.result=float("nan")
 
     def track_hist(self,hists,rot=0):
         for i in hists:
-            if rot%4==0:
-                ip=(4-i[1],4+i[0])
-            elif rot%4==1:  # i[1]-->i[0]; i[0]--> -i[1]
-                ip=(4-i[0],4-i[1])
-            elif rot%4==2:
-                ip=(4+i[1],4-i[0])
-            elif rot%4==3:
-                ip=(4+i[0],4+i[1])
+            ip=(self.BDMD-i[1],self.BDMD+i[0])
             if self.board[ip[0]][ip[1]]!=0:
-                log(self.board)
                 raise Exception("Put stone on existed stone?")
             self.board[ip[0]][ip[1]] = self.currentPlayer
             self.currentPlayer *= -1
+        self.board=self.board.rot90(rot)
 
     def getCurrentPlayer(self):
         return self.currentPlayer
 
     def getPossibleActions(self,printflag=False):
-        cv = F.conv2d(self.board.abs().view(1,1,9,9), kern_possact_3x3, padding=1)
+        cv = F.conv2d(self.board.abs().view(1,1,self.BDSZ,self.BDSZ), kern_possact_3x3, padding=1)
         if printflag:
             print(cv)
-        l_temp=[(cv[0,0,i,j].item(),(i,j)) for i in range(9) for j in range(9) if cv[0,0,i,j]>0]
+        l_temp=[(cv[0,0,i,j].item(),(i,j)) for i in range(self.BDSZ) for j in range(self.BDSZ) if cv[0,0,i,j]>0]
         l_temp.sort(key=lambda x:-1*x[0])
         return [i[1] for i in l_temp]
 
@@ -120,28 +117,29 @@ class FiveStoneState():
         return newState
 
     def isTerminal(self):
-        conv1 = F.conv2d(self.board.view(1,1,9,9), self.kern_5, padding=2)
-        if conv1.max() >= 0.9 or conv1.min() <= -0.9:
-            return True
-        if self.board.abs().sum()==81:
-            return True
-        return False
+        conv1 = F.conv2d(self.board.view(1,1,self.BDSZ,self.BDSZ), self.kern_5, padding=2)
+        if conv1.max() >= 0.9:
+            self.is_terminal=True
+            self.result=self.BLACKWIN
+        elif conv1.min() <= -0.9:
+            self.is_terminal=True
+            self.result=-self.BLACKWIN
+        elif self.board.abs().sum()==self.BDAR:
+            self.is_terminal=True
+            self.result=0.0
+        return self.is_terminal
 
     def getReward(self):
-        conv1 = F.conv2d(self.board.view(1,1,9,9), self.kern_5, padding=2)
-        if conv1.max() >= 0.9:
-            return 10000
-        elif conv1.min() <= -0.9:
-            return -10000
-        if self.board.sum()==81:
-            return 0
+        if self.is_terminal:
+            return self.result
 
-        boards = torch.stack((self.board.view(1,9,9), self.board.view(1,9,9).rot90(1,[1,2]),
-                              self.board.view(1,9,9).rot90(2,[1,2]), self.board.view(1,9,9).rot90(3,[1,2])))
+        boards = torch.stack((self.board.view(1,self.BDSZ,self.BDSZ),
+                              self.board.view(1,self.BDSZ,self.BDSZ).rot90(1,[1,2]),
+                              self.board.view(1,self.BDSZ,self.BDSZ).rot90(2,[1,2]),
+                              self.board.view(1,self.BDSZ,self.BDSZ).rot90(3,[1,2])))
 
         bk_reward=self.getReward_sub(boards,1)
         wt_reward=self.getReward_sub(boards,-1)
-        #print(bk_reward,wt_reward)
         if self.currentPlayer == 1:
             return bk_reward-self.attack_factor*wt_reward
         else:
@@ -227,8 +225,8 @@ def pretty_board(gamestate):
     li=[]
     for i,r in enumerate(gamestate.board):
         lj="|".join([d_stone[j.item()] for j in r])
-        li.append("%2d|%s|"%(4-i,lj))
-    li.append("           0 1 2 3 4 ")
+        li.append("%2d|%s|"%(gamestate.BDMD-i,lj))
+    li.append("   "+"  "*gamestate.BDMD+"0 1 2 3 4 5 6 7")
     li="\n".join(li)
     log("\n%s"%(li),l=0)
     return li
@@ -274,4 +272,4 @@ def test_rot():
 
 if __name__=="__main__":
     #test_rot()
-    play_tui(human_color=-1,deep=3)
+    play_tui(human_color=1,deep=2)

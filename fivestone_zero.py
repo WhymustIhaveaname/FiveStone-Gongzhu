@@ -10,21 +10,23 @@ from MCTS.mcts import abpruning
 from fivestone_conv import log,pretty_board,get_tui_input,FiveStoneState
 
 torch.set_default_dtype(torch.float16)
-from net_topo import PV_resnet_wide_mid, PV_resnet_wide
+from net_topo import PV_resnet_wide_mid, PV_resnet_wide, PV_resnet_small
 from benchmark_utils import open_bl,benchmark,vs_noth
 
 # big: [0-3]*3*10=120
 # normal: 30
 gpu_ids = [0,1,2,3]
-num_thread_per_gpu = 6
+num_thread_per_gpu = 6 # 5 is the max
 num_games_per_thread = 5
 
-PARA_DICT={ "ACTION_NUM":100, "POSSACT_RAD":1, "AB_DEEP":1, "SOFTK":4,
+PARA_DICT={ "ACTION_NUM":225, "POSSACT_RAD":1, "AB_DEEP":1, "SOFTK":4,
             "LOSS_P_WT":1.0, "LOSS_P_WT_RATIO": 0.5, "STDP_WT": 0.0, "BATCH_SIZE":64,
             #"FINAL_LEN": 0, "FINAL_BIAS": -1,
-            "UID_ROT": 4, "SHIFT_MAX":3}
+            "UID_ROT": 4, "SHIFT_MAX":6}
 
 class FiveStone_ZERO(FiveStoneState):
+    BLACKWIN=1.0
+
     def __init__(self, model, device):
         self.device = device
         self.model = model
@@ -38,29 +40,19 @@ class FiveStone_ZERO(FiveStoneState):
         self.reset()
 
     def reset(self):
-        self.board = torch.zeros(9,9,device=self.device,dtype=torch.float16)
-        self.board[4,4] = 1.0
+        self.board = torch.zeros(self.BDSZ,self.BDSZ,device=self.device,dtype=torch.float16)
+        self.board[self.BDMD,self.BDMD] = 1.0
         self.currentPlayer = -1
-
-    def isTerminal(self):
-        conv1 = F.conv2d(self.board.view(1,1,9,9), self.kern_5, padding=2)
-        if conv1.max() >= 0.9 or conv1.min() <= -0.9:
-            return True
-        if self.board.abs().sum()==81:
-            return True
-        return False
+        self.is_terminal=False
+        self.result=float("nan")
+        del self.result
 
     def getReward(self):
-        conv1 = F.conv2d(self.board.view(1,1,9,9), self.kern_5, padding=2)
-        if conv1.max() >= 0.9:
-            return torch.tensor([1.0], device=self.device)
-        elif conv1.min() <= -0.9:
-            return torch.tensor([-1.0], device=self.device)
-        if self.board.sum()==81:
-            return torch.tensor([0.0], device=self.device)
+        if self.is_terminal:
+            return self.result
 
         with torch.no_grad():
-            input_data=self.gen_input().view((1,3,9,9))
+            input_data=self.gen_input().view((1,3,self.BDSZ,self.BDSZ))
             _,value = self.model(input_data)
             value=value.view(1).clip(-0.99,0.99)
         return value
@@ -68,49 +60,38 @@ class FiveStone_ZERO(FiveStoneState):
     def gen_input(self):
         return torch.stack([(self.board==1).half(),
                             (self.board==-1).half(),
-                            torch.ones(9,9,device=self.device,dtype=torch.float16)*self.currentPlayer])
+                            torch.ones(self.BDSZ,self.BDSZ,device=self.device,dtype=torch.float16)*self.currentPlayer])
 
-    def policy_choice_best(self):
+    def policy_choice(self,method="best"):
         input_data=self.gen_input()
-        policy,value=self.model(input_data.view((1,3,9,9)))
-        policy=policy.view(9,9)
-        lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if self.board[i,j]==0]
-        best=max(lkv,key=lambda x: x[1])
-        return best[0]
+        policy,value=self.model(input_data.view((1,3,self.BDSZ,self.BDSZ)))
+        policy=policy.view(self.BDSZ,self.BDSZ)
 
-    def policy_choice_softmax(self):
-        input_data=self.gen_input().view((1,3,9,9))
-        policy,value=self.model(input_data)
-        policy=policy.view(9,9)
-        lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if self.board[i,j]==0]
-        lv=F.softmax(torch.tensor([v for k,v in lkv]),dim=0)
-        r=torch.multinomial(lv,1)
-        return lkv[r][0]
+        lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(self.BDSZ),range(self.BDSZ)) if self.board[i,j]==0]
+
+        if method=="best":
+            best=max(lkv,key=lambda x: x[1])
+            return best[0]
 
     def getPossibleActions(self):
-        """cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_3x3, padding=1)
-        #cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_5x5, padding=2)
-        l_temp=[(cv[0,0,i,j].item(),(i,j)) for i in range(9) for j in range(9) if cv[0,0,i,j]>0]
-        l_temp.sort(key=lambda x:-1*x[0])
-        return [i[1] for i in l_temp]"""
-        input_data=self.gen_input().view((1,3,9,9))
-
+        input_data=self.gen_input().view((1,3,self.BDSZ,self.BDSZ))
 
         policy,value=self.model(input_data)
-        policy=policy.view(9,9)
+        policy=policy.view(self.BDSZ,self.BDSZ)
         if self.radius in (1,2):
             if self.radius==1:
-                cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_3x3, padding=1)
+                cv = F.conv2d(self.board.abs().view(1,1,self.BDSZ,self.BDSZ), self.kern_possact_3x3, padding=1)
             elif self.radius==2:
-                cv = F.conv2d(self.board.abs().view(1,1,9,9), self.kern_possact_5x5, padding=2)
-            lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if cv[0,0,i,j]>0]
+                cv = F.conv2d(self.board.abs().view(1,1,self.BDSZ,self.BDSZ), self.kern_possact_5x5, padding=2)
+            lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(self.BDSZ),range(self.BDSZ)) if cv[0,0,i,j]>0]
         elif self.radius>2:
-            lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(9),range(9)) if self.board[i,j]==0]
+            lkv=[((i,j),policy[i,j].item()) for i,j in itertools.product(range(self.BDSZ),range(self.BDSZ)) if self.board[i,j]==0]
+
+        lkv.sort(key=lambda x:x[1],reverse=True)
 
         if len(lkv)<self.target_num:
             return [k for k,v in lkv]
         else:
-            lkv.sort(key=lambda x:x[1],reverse=True)
             return [lkv[i][0] for i in range(self.target_num)]
 
 def push_data(datalist,in_mat,best_value,target_p,legal_mask,rots=[0,],flip=True):
@@ -128,8 +109,8 @@ def push_data(datalist,in_mat,best_value,target_p,legal_mask,rots=[0,],flip=True
     for rot,i in itertools.product(rots,range(len(in_mts))):
         this_data=[ in_mts[i].rot90(rot,[1,2]),
                     bst_vals[i],
-                    tg_ps[i].rot90(rot,[0,1]).reshape(81),
-                    lg_msks[i].rot90(rot,[0,1]).reshape(81)]
+                    tg_ps[i].rot90(rot,[0,1]).reshape(FiveStone_ZERO.BDAR),
+                    lg_msks[i].rot90(rot,[0,1]).reshape(FiveStone_ZERO.BDAR)]
         datalist.append(this_data)
         #print(this_data[0]);input()
 
@@ -179,7 +160,7 @@ def gen_data(model,num_games,gpu_id,randseed,PARA_DICT):
             lkv=[(k,v) for k,v in searcher.children.items()]
             lv=torch.tensor([v for k,v in lkv],dtype=torch.float32)*state.currentPlayer
             lv=F.softmax(lv*PARA_DICT["SOFTK"],dim=0)
-            target_p=torch.zeros(9,9,device=state.device,dtype=torch.float32)
+            target_p=torch.zeros(state.BDSZ,state.BDSZ,device=state.device,dtype=torch.float32)
             for j in range(len(lkv)):
                 target_p[lkv[j][0]]=lv[j]
             legal_mask=(state.board==0).float()
@@ -222,21 +203,23 @@ def gen_data_multithread(model,num_games,gpu_ids,thread_num):
             plist.append(Process(target=gen_data_sub,args=(copy.deepcopy(model),num_games,j,i+j+t,data_q,PARA_DICT)))
             plist[-1].start()
     rlist=[]
+    children_num=0
     for p in plist:
         p.join()
         fd,fname=data_q.get(False)
         with open(fname,"rb") as f:
             rlist+=pickle.load(f)
         os.unlink(fname)
-    return rlist
+        children_num+=1
+    return rlist,children_num
 
 def train(model, train_device):
     torch.set_default_dtype(torch.float32)
-    optim = torch.optim.Adam(model.parameters(),lr=0.0001,betas=(0.3,0.999),eps=1e-07,weight_decay=1e-4,amsgrad=False)
+    optim = torch.optim.Adam(model.parameters(),lr=0.0003,betas=(0.3,0.999),eps=1e-07,weight_decay=1e-4,amsgrad=False)
     log("optim: %s"%(optim.__dict__['defaults'],))
     log("PARA_DICT: %s"%(PARA_DICT))
 
-    for epoch in range(400+1):
+    for epoch in range(800+1):
         if epoch<3 or (epoch<40 and epoch%5==0) or epoch%10==0:
             print_flag=True
         else:
@@ -247,24 +230,22 @@ def train(model, train_device):
             torch.save(model.state_dict(),save_name)
 
         if print_flag and epoch%5==0 and epoch>0:
-            state_nn=FiveStone_ZERO(copy.deepcopy(model).eval().half(), train_device)
-            state_nn.target_num=100
-            state_nn.radius=2 # do not touch benchmark parameters!
+            state_nn=FiveStone_ZERO(copy.deepcopy(model).eval().half(),train_device)
             vs_noth(state_nn,epoch)
             benchmark(state_nn,epoch)
 
         #train_datas = gen_data(copy.deepcopy(model).eval().half(),30,1,time.time(),PARA_DICT)
-        train_datas = gen_data_multithread(model,num_games_per_thread,gpu_ids,num_thread_per_gpu)
+        train_datas,children_num = gen_data_multithread(model,num_games_per_thread,gpu_ids,num_thread_per_gpu)
         train_datas = [( i.to(train_device),j.to(train_device),k.to(train_device),l.to(train_device) ) for i,j,k,l in train_datas]
 
         balance_bkwt(train_datas)
         trainloader = torch.utils.data.DataLoader(train_datas,batch_size=PARA_DICT["BATCH_SIZE"],shuffle=True,drop_last=True)
 
         if print_flag:
-            log("epoch %d with %d datas"%(epoch,len(train_datas)))
+            log("epoch %d with %d %d datas"%(epoch,children_num,len(train_datas)))
             for batch in trainloader:
                 policy,value = model(batch[0])
-                log("sampled output_value, output_policy:\n%s\n%s"%(" ".join(["%.2f"%(i[0]) for i in value][0:32]),
+                log("sampled output_value, output_policy_std:\n%s\n%s"%(" ".join(["%.2f"%(i[0]) for i in value][0:32]),
                                                                     " ".join(["%.2f"%(i) for i in (policy*batch[3]).std(dim=1)][0:32]) ))
 
                 softmax_p = (policy*batch[3]).softmax(dim=1)
@@ -310,7 +291,7 @@ def train(model, train_device):
             if print_flag and (age<3 or (age+1)%5==0):
                 log("    age %2d: %.6f"%(age,running_loss/ax))
 
-def test_must_win(model):
+"""def test_must_win(model):
     state = FiveStone_ZERO(model)
     for i in range(3):
         state.board[4+i,4+i]=-1
@@ -323,7 +304,7 @@ def test_must_win(model):
         s.append(" ".join(["%6.2f"%(policy[i,j]) for j in range(9)]))
     log("\n%s"%("\n".join(s)))
     log(value)
-    pretty_board(state.takeAction(state.policy_choice_best()))
+    pretty_board(state.takeAction(state.policy_choice_best()))"""
 
 def play_tui(model,human_color=-1):
     searcher=abpruning(deep=5,n_killer=2,gameinf=1024)
@@ -348,25 +329,23 @@ def test_push_data():
     state.track_hist(open_bl[3])
     mat_in=state.gen_input()
     best_value=torch.tensor([3.5],device="cuda")
-    target_p=torch.rand(9,9,device="cuda")
+    target_p=torch.rand(state.BDSZ,state.BDSZ,device="cuda")
     legal_mask=(state.board==0).type(torch.cuda.FloatTensor)
 
     push_data([],mat_in,best_value,target_p,legal_mask,rots=[0,1])
 
-def test_vs_noth(model):
+def test_vs_noth(model,device):
     """passed"""
-    state=FiveStone_ZERO(model.eval().half())
+    state=FiveStone_ZERO(model.eval().half(),device)
     vs_noth(state,-1)
 
 if __name__=="__main__":
     torch.multiprocessing.set_start_method('spawn')
     torch.set_default_dtype(torch.float32)
 
-    log(torch.cuda.is_available())
-    log(torch.cuda.device_count())
     train_device = torch.device("cuda:0")
     #model=PV_resnet().to(train_device)
-    model=PV_resnet_wide().to(train_device)
+    model=PV_resnet_small().to(train_device)
     start_file=None
     #start_file="./logs/6_1/PV_resnet-16-15857234-180.pkl"
     #start_file="./logs/8/PV_resnet-16-15857234-40.pkl"
@@ -379,5 +358,5 @@ if __name__=="__main__":
     #test_must_win(model)
     #play_tui(model,human_color=1)
     #test_push_data()
-    #test_vs_noth(model)
+    #test_vs_noth(model,train_device)
     train(model, train_device)

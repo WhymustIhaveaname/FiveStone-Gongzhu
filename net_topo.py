@@ -67,7 +67,10 @@ class BasicBlock(nn.Module):
 
     def forward(self, x):
         out=F.relu(self.bn1(self.conv1(x)))
-        out=self.bn2(self.conv2(out))
+        #print(out.isnan().any())
+        out=self.conv2(out)
+        #print(out.isnan().any());input()
+        out=self.bn2(out)
         out+=self.shortcut(x)
         out=F.relu(out)
         return out
@@ -78,6 +81,7 @@ class PV_resnet(PVnet_cnn):
         self.conv1=nn.Conv2d(3,64,kernel_size=6,padding=2,bias=False)
         self.bn1=nn.BatchNorm2d(64)
         self.num_conv_layers=1
+        self.block_strs=["%dx%dx%d(padding=%d)"%(self.conv1.weight.shape[0],self.conv1.weight.shape[2],self.conv1.weight.shape[3],self.conv1.padding[0])]
 
         self.layer1 = self._make_layer(64,128,stride=1)
         self.layer2 = self._make_layer(128,256,stride=1)
@@ -88,6 +92,7 @@ class PV_resnet(PVnet_cnn):
 
     def _make_layer(self,in_planes,out_planes,stride=1):
         self.num_conv_layers+=4
+        self.block_strs.append("basic(%d,%d)"%(in_planes,out_planes))
         layers=[BasicBlock(in_planes,out_planes,stride=stride),BasicBlock(out_planes,out_planes)]
         return nn.Sequential(*layers)
 
@@ -104,7 +109,7 @@ class PV_resnet(PVnet_cnn):
         return p,v
 
     def __str__(self):
-        return "%s-%d %s"%(self.__class__.__name__,self.num_conv_layers,self.num_paras())
+        return "%s %s %d %s"%(self.__class__.__name__,"-".join(self.block_strs),self.num_conv_layers,self.num_paras())
 
 class PV_resnet_wide(PV_resnet):
     def __init__(self):
@@ -154,6 +159,38 @@ class PV_resnet_wide_mid(PV_resnet):
         out=self.layer3(out)
         out=F.max_pool2d(out,2)
         out=out.view(-1,1024*2*2)
+        p=self.fnp(out)
+        v=self.fnv(out)
+        return p,v
+
+class PV_resnet_small(PV_resnet):
+    def __init__(self):
+        super(PV_resnet,self).__init__()
+        self.conv1=nn.Conv2d(3,16,kernel_size=6,padding=2,bias=False)
+        self.bn1=nn.BatchNorm2d(16)
+        self.num_conv_layers=1
+        self.block_strs=["%dx%d(padding=%d)"%(self.conv1.weight.shape[0],self.conv1.weight.shape[2],self.conv1.padding[0])]
+        self.block_strs.append("max_pool2d(2)")
+
+        self.layer1 = self._make_layer(16,32,stride=1)
+        self.layer2 = self._make_layer(32,64,stride=1)
+        self.layer3 = self._make_layer(64,64,stride=1)
+        self.layer4 = self._make_layer(64,64,stride=1)
+        self.block_strs.append("avg_pool2d(3,2)")
+
+        self.fnp=nn.Linear(64*3*3,225)
+        self.fnv=nn.Linear(64*3*3,1)
+
+    def forward(self, x):
+        out=F.relu(self.bn1(self.conv1(x)))
+        out=F.max_pool2d(out,2)
+        out=self.layer1(out)
+        out=self.layer2(out)
+        out=self.layer3(out)
+        out=self.layer4(out)
+        #print("3",out.isnan().any());input()
+        out=F.avg_pool2d(out,3,stride=2)
+        out=out.view(-1,64*3*3)
         p=self.fnp(out)
         v=self.fnv(out)
         return p,v

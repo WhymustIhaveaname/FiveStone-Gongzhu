@@ -1,13 +1,13 @@
 # FiveStone-Gongzhu
 
 We solved Gomoku (Five in a Row) using both alpha-beta pruning and AlphaZero's architecture.
-For simplicity, this Gomoku uses a 9x9 board and applies no professional rules ([Renju's 33, 44 and overlines rules applied to black](https://en.wikipedia.org/wiki/Gomoku#Specific_variations)).
+For simplicity, this Gomoku applies no professional rules ([Renju's 33, 44 and overlines rules applied to black](https://en.wikipedia.org/wiki/Gomoku#Specific_variations)).
 We show that a 16 layer convolutional network can reach a higher level than man-made evaluation only by self-learning.
 We investigate some statistical properties of our AIs.
 This project takes advantage of [Gongzhu-Society](https://github.com/Gongzhu-Society/MCTS)'s MCTS and alpha-beta pruning package.
 
 我们用两种方法 —— alpha-beta 剪枝和类 AlphaZero 方法解决了五子棋的问题。
-出于演示的目的，我们使用了 9x9 的棋盘并且没有采用任何禁手规则。
+出于演示的目的，我们没有采用任何禁手规则。
 一个 16 层的卷积神经网络通过自学就能达到比 alpha-beta 剪枝中人为指定的 evaluation 更高的水平。
 我们对我们 AI 的行为进行了一些统计。
 本项目使用了 [Gongzhu-Society](https://github.com/Gongzhu-Society/MCTS) 的蒙特卡洛树搜索和 alpha-beta 剪枝包。
@@ -93,6 +93,7 @@ The following pictures are the kernels for a typical training.
       (try 25) However, after decreasing the number of 6x6 kernel of the first layer from 64 to 36,
       the number of survived kernels decreased.
     * The learning rate is too large.
+      (try 26) Train with lr=0.0001 rather than 0.0005 as usual, the number of kernels blackened after 360 epochs is 19.
     * This training architecture has the ability to "purify itself" or "distillate simultaneously".
       It abandons useless features during the training just like we humans.
 
@@ -189,6 +190,8 @@ However, as shown by the following figures, we'd better turn it off.
         <th>FINAL_LEN=0</th>
     </tr>
 </table>
+
+## Persuing Better Performence
 
 ## Statistics and Behaviour Analyse
 

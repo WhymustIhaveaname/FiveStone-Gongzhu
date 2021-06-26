@@ -6,14 +6,15 @@ import itertools
 
 # unbalance openings with white/black in advantage
 # the first black stone (0,0) is omitted
-open_unbl_white=[[(1,1),(-4,-4)],
+open_unbl_white_not_using=[[(1,1),(-4,-4)],
                 [(1,1),(4,4),(2,0),(4,-4)],
                 [(1,1),(4,4),(2,0),(4,-4),(2,2),(-4,4)],
                 [(1,1),(4,4),(2,0),(4,-4),(2,2),(-4,4),(2,1),(-4,-4)]]
-open_unbl_black=[[(-4,-4),(1,1)],
+open_unbl_black_not_using=[[(-4,-4),(1,1)],
                 [(-4,-4),(1,1),(4,4),(2,2)],
                 [(-4,-4),(1,1),(4,4),(2,2),(4,-4),(0,2)],
                 [(-4,-4),(1,1),(4,4),(2,2),(4,-4),(0,2),(-4,4),(0,1)]]
+
 # balance openings, the first black stone (0,0) is omitted
 # taken from http://chiuinan.github.io/game/game/intro/ch/c41/ms52/rule/5ch_rule.htm
 open_bl=[   [(0,1),(0,2)], [(0,1),(1,2)], [(0,1),(2,2)], [(0,1),(1,1)],
@@ -28,14 +29,17 @@ open_bl=[   [(0,1),(0,2)], [(0,1),(1,2)], [(0,1),(2,2)], [(0,1),(1,1)],
 def vs_noth(state_nn,epoch):
     searcher=abpruning(deep=1,n_killer=2)
     l_ans=[]
-    for i1,i2,nn_color in itertools.product(range(2,7),range(2,7),[-1,1]):
+    nn_color=1
+    for i1,i2 in itertools.product(range(state_nn.BDSZ),range(state_nn.BDSZ)):
+        nn_color*=-1
         state_nn.reset()
-        state_nn.board[4,4]=0
+        state_nn.board[state_nn.BDMD,state_nn.BDMD]=0
         state_nn.board[i1,i2]=nn_color
         #pretty_board(state_nn);input()
         while not state_nn.isTerminal():
             state_nn.currentPlayer=nn_color
-            state_nn=state_nn.takeAction(state_nn.policy_choice_best())
+            state_nn=state_nn.takeAction(state_nn.policy_choice(method="best"))
+        #log(state_nn.getReward())
         l_ans.append(state_nn.board.abs().sum().item())
         #log(l_ans)
         #pretty_board(state_nn);input()
@@ -73,7 +77,7 @@ def benchmark_color(state_nn,nn_color,openings,epoch):
         state_conv.track_hist(openings[i1],rot=i2)
         while not state_nn.isTerminal():
             if state_nn.currentPlayer==nn_color:
-                action=state_nn.policy_choice_best()
+                action=state_nn.policy_choice(method="best")
             else:
                 searcher.search(initialState=state_conv)
                 best=[(k,v) for k,v in searcher.children.items()]
